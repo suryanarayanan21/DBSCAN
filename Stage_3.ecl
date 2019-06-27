@@ -1,5 +1,4 @@
 IMPORT STD.system.Thorlib;
-IMPORT Files;
 
 //Sample code for stage 3 Global Merge
 
