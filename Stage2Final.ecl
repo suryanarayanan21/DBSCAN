@@ -32,7 +32,7 @@ raw := DATASET([
 //           mark y as core point (if_core = TRUE)
 //         Union(x, y)
 
-
+//pseudo code for local DBSCAN
 DATASET(Files.l_stage3) locDBSCAN(DATASET(Files.l_stage2) dsIn, //distributed data from stage 1
                                   REAL8 eps,   //distance threshold
                                   UNSIGNED minPts, //the minimum number of points required to form a cluster,
@@ -45,9 +45,6 @@ DATASET(Files.l_stage3) locDBSCAN(DATASET(Files.l_stage2) dsIn, //distributed da
 
 using namespace std;
 
-// ECL Embedding code
-
-// Input datastructure
 struct dataRecord{
   uint16_t wi;
   unsigned long long id;
@@ -60,7 +57,6 @@ struct dataRecord{
   bool if_core;
 };
 
-//Reading function
 vector<dataRecord> readDS(const void *s, uint32_t len){
   vector<dataRecord> ret;
   char* p = (char*)s;
@@ -86,7 +82,6 @@ vector<dataRecord> readDS(const void *s, uint32_t len){
   return ret;
 }
 
-// Return datastructure
 struct retRecord{
   uint16_t wi;
   unsigned long long id;
@@ -96,7 +91,6 @@ struct retRecord{
   bool if_core;
 };
 
-// Return write function
 void* writeDS(vector<retRecord> ds, uint32_t& len){
   uint32_t lenRec = sizeof(uint16_t) + 3*sizeof(unsigned long long) + 2*sizeof(bool);
   uint32_t totLen = ds.size() * lenRec;
@@ -113,8 +107,6 @@ void* writeDS(vector<retRecord> ds, uint32_t& len){
   }
   return r;
 }
-
-// DBSCAN C++ code
 
 struct node
 {
@@ -250,72 +242,81 @@ vector<Row> getNeighrestNeighbours(vector<Row> dataset, Row row, double eps){
     return neighbours;
 }
 
-vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps){
+vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps,vector<bool> ifLocal){
     vector<Row> transdataset=initialise(dataset);
     vector<Row> neighs;
-    int minpts;
     Node temp;
     int temp1;
     for(int ro=0;ro<transdataset.size();ro++){
         cout<<"Processing"<<ro<<endl;
         
+        if(!ifLocal[ro]) continue;
+
         neighs=getNeighrestNeighbours(transdataset,transdataset[ro],eps);
         
         if(neighs.size()>=minpoints){
             core[ro]=1;
             
             for(int neigh=0;neigh<neighs.size();neigh++){
-    
-                temp1=core[neighs[neigh]->actual_id];
-                if(temp1)
-                {
-        
-                    //modify parent id's
-                    temp=unionOp(&transdataset[ro]->id,&neighs[neigh]->id);
-                     cout<<"\nThe parent is "<<temp->data<<endl;
-                }
-                else
-                {
-                    if(!visited[neighs[neigh]->actual_id]){
-                        visited[neighs[neigh]->actual_id]=1;
-                        // cout<<" Trying union for "<<transdataset[ro]->id.data<<" and "<<neighs[neigh]->id.data<<endl;
-                    temp=unionOp(&transdataset[ro]->id,&neighs[neigh]->id);
-
-                    cout<<"\nThe parent is "<<temp->data<<endl;
+                int neighId = neighs[neigh]->actual_id;
+                if(ifLocal[neighId]){
+                    // Local neighbour
+                    temp1=core[neighId];
+                    if(temp1)
+                    {
+            
+                        //modify parent id's
+                        temp=unionOp(&transdataset[ro]->id,&neighs[neigh]->id);
+                        cout<<"\nThe parent is "<<temp->data<<endl;
                     }
+                    else
+                    {
+                        if(!visited[neighId]){
+                            visited[neighId]=1;
+                            // cout<<" Trying union for "<<transdataset[ro]->id.data<<" and "<<neighs[neigh]->id.data<<endl;
+                        temp=unionOp(&transdataset[ro]->id,&neighs[neigh]->id);
+
+                        cout<<"\nThe parent is "<<temp->data<<endl;
+                        }
+                    }
+                } else {
+                    // Remote neighbour
+                    vector<Row> tempNeighs = getNeighrestNeighbours(transdataset,transdataset[neighId],eps);
+                    if(tempNeighs.size() >= minpoints)
+                        core[neighId] = 1;
+                    unionOp(&transdataset[ro]->id,&neighs[neigh]->id);
                 }
-                
             }
         }
     }
     return transdataset;
-
 }
-
-// DBSCAN main body
 
 #body
 
 vector<vector<double>> dataset;
                                
 vector<dataRecord> ds = readDS(dsin, lenDsin);
+vector<bool> ifLocal;
 
 for(uint i=0; i<ds.size(); ++i){
   dataset.push_back(ds[i].fields);
+  ifLocal.push_back(localnode == ds[i].nodeId);
 }
 
-vector<Row> out_data= dbscan(dataset,minpts,eps);
+vector<Row> out_data= dbscan(dataset,minpts,eps,ifLocal);
 
 vector<retRecord> retDs;
-
-// Write obtained data into return structure
 
 for(uint i=0;i<out_data.size();i++){
   Node dat=find(&out_data[i]->id);
   retRecord temp;
   temp.wi = ds[i].wi;
   temp.id = ds[i].id;
-  temp.parentId = ds[dat->data].id;
+  if(ifLocal[i])
+    temp.parentId = ds[dat->data].id;
+  else
+    temp.parentId = ds[i].parentId;
   temp.nodeId = localnode;
   temp.if_local = ds[i].if_local;
   temp.if_core = core[i];
