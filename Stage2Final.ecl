@@ -32,7 +32,7 @@ raw := DATASET([
 //           mark y as core point (if_core = TRUE)
 //         Union(x, y)
 
-//pseudo code for local DBSCAN
+
 DATASET(Files.l_stage3) locDBSCAN(DATASET(Files.l_stage2) dsIn, //distributed data from stage 1
                                   REAL8 eps,   //distance threshold
                                   UNSIGNED minPts, //the minimum number of points required to form a cluster,
@@ -45,6 +45,9 @@ DATASET(Files.l_stage3) locDBSCAN(DATASET(Files.l_stage2) dsIn, //distributed da
 
 using namespace std;
 
+// ECL Embedding code
+
+// Input datastructure
 struct dataRecord{
   uint16_t wi;
   unsigned long long id;
@@ -57,6 +60,7 @@ struct dataRecord{
   bool if_core;
 };
 
+//Reading function
 vector<dataRecord> readDS(const void *s, uint32_t len){
   vector<dataRecord> ret;
   char* p = (char*)s;
@@ -82,6 +86,7 @@ vector<dataRecord> readDS(const void *s, uint32_t len){
   return ret;
 }
 
+// Return datastructure
 struct retRecord{
   uint16_t wi;
   unsigned long long id;
@@ -91,6 +96,7 @@ struct retRecord{
   bool if_core;
 };
 
+// Return write function
 void* writeDS(vector<retRecord> ds, uint32_t& len){
   uint32_t lenRec = sizeof(uint16_t) + 3*sizeof(unsigned long long) + 2*sizeof(bool);
   uint32_t totLen = ds.size() * lenRec;
@@ -107,6 +113,8 @@ void* writeDS(vector<retRecord> ds, uint32_t& len){
   }
   return r;
 }
+
+// DBSCAN C++ code
 
 struct node
 {
@@ -284,6 +292,8 @@ vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps){
 
 }
 
+// DBSCAN main body
+
 #body
 
 vector<vector<double>> dataset;
@@ -297,6 +307,8 @@ for(uint i=0; i<ds.size(); ++i){
 vector<Row> out_data= dbscan(dataset,minpts,eps);
 
 vector<retRecord> retDs;
+
+// Write obtained data into return structure
 
 for(uint i=0;i<out_data.size();i++){
   Node dat=find(&out_data[i]->id);
