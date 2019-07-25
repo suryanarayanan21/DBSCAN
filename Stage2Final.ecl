@@ -313,10 +313,7 @@ for(uint i=0;i<out_data.size();i++){
   retRecord temp;
   temp.wi = ds[i].wi;
   temp.id = ds[i].id;
-  if(ifLocal[i])
-    temp.parentId = ds[dat->data].id;
-  else
-    temp.parentId = ds[i].parentId;
+  temp.parentId = ds[dat->data].id;
   temp.nodeId = localnode;
   temp.if_local = ds[i].if_local;
   temp.if_core = core[i];
