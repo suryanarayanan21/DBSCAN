@@ -76,7 +76,7 @@ vector<dataRecord> readDS(const void *s, uint32_t len){
     temp.if_core = *((bool*)p); p += sizeof(bool);
     ret.push_back(temp);
     int sizeStruct = sizeof(uint16_t) + 3*sizeof(unsigned long long) +
-                     3*sizeof(bool) + sizeof(uint32_t) + temp.lenFields;
+                    3*sizeof(bool) + sizeof(uint32_t) + temp.lenFields;
     len -= sizeStruct;
   }
   return ret;
@@ -110,9 +110,9 @@ void* writeDS(vector<retRecord> ds, uint32_t& len){
 
 struct node
 {
-	int data;
-	node* parent=NULL;
-	vector<node *> child;
+  int data;
+  node* parent=NULL;
+  vector<node *> child;
 };
 
 struct row
@@ -126,8 +126,8 @@ typedef struct node* Node;
 typedef struct row* Row;
 
 Node newNode(int data){
-	Node n=new struct node;
-	n->data=data;
+  Node n=new struct node;
+  n->data=data;
     return n;	
 }
 
@@ -135,8 +135,8 @@ Node find(Node y){
 
     if(y==NULL){
             return NULL;
-	 }
-   return (y->parent)==NULL?y:find(y->parent);
+  }
+  return (y->parent)==NULL?y:find(y->parent);
 }
 
 
@@ -146,37 +146,37 @@ Node unionOp(Node x,Node y)
 
   // cout<<"INSIDE "<<x->data<<"INSDIE";
   if(find(y)==y)
-   {
-     if(x->data>y->data){
-     (x->child).push_back(y);
-     y->parent=x;     
-     }
-     else
-     {
-       (y->child).push_back(x);
-     x->parent=y; 
-     }
-     
-     return find(x);
-   }
+  {
+    if(x->data>y->data){
+    (x->child).push_back(y);
+    y->parent=x;     
+    }
+    else
+    {
+      (y->child).push_back(x);
+    x->parent=y; 
+    }
+    
+    return find(x);
+  }
   else if(find(x)==find(y)){  
         return find(x);
-   }
+  }
     else
-   {
-       if(find(x)->data>find(y)->data){
+  {
+      if(find(x)->data>find(y)->data){
         (find(x)->child).push_back(find(y));
         (find(y)->parent)=find(x);
-	    return find(x);
-	   
-	   }
-       else{
-       	(find(y)->child).push_back(find(x));
+      return find(x);
+    
+    }
+      else{
+        (find(y)->child).push_back(find(x));
         (find(x)->parent)=find(y);
         return find(y);
-		}
-       
-   }
+    }
+      
+  }
 
 
 }
@@ -228,10 +228,13 @@ vector<Row> initialise(vector<vector<double>> dataset){
     return data;
 }
 
-vector<Row> getNeighrestNeighbours(vector<Row> dataset, Row row, double eps){
+vector<Row> getNeighrestNeighbours(vector<Row> dataset, Row row, double eps, vector<uint16_t> wis, uint16_t wi){
     vector<Row> neighbours;
     for(int i=0;i<dataset.size();i++){
         if(dataset[i]==row)
+        continue;
+
+        if(wis[i] != wi)
         continue;
 
         double dist = euclidean(dataset[i],row);
@@ -242,7 +245,7 @@ vector<Row> getNeighrestNeighbours(vector<Row> dataset, Row row, double eps){
     return neighbours;
 }
 
-vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps,vector<bool> ifLocal){
+vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps,vector<bool> ifLocal, vector<uint16_t> wis){
     vector<Row> transdataset=initialise(dataset);
     vector<Row> neighs;
     Node temp;
@@ -252,7 +255,7 @@ vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps,vecto
         
         if(!ifLocal[ro]) continue;
 
-        neighs=getNeighrestNeighbours(transdataset,transdataset[ro],eps);
+        neighs=getNeighrestNeighbours(transdataset,transdataset[ro],eps,wis,wis[ro]);
         
         if(neighs.size()>=minpoints){
             core[ro]=1;
@@ -281,7 +284,7 @@ vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps,vecto
                     }
                 } else {
                     // Remote neighbour
-                    vector<Row> tempNeighs = getNeighrestNeighbours(transdataset,transdataset[neighId],eps);
+                    vector<Row> tempNeighs = getNeighrestNeighbours(transdataset,transdataset[neighId],eps,wis,wis[neighId]);
                     if(tempNeighs.size() >= minpoints)
                         core[neighId] = 1;
                     unionOp(&transdataset[ro]->id,&neighs[neigh]->id);
@@ -295,16 +298,18 @@ vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps,vecto
 #body
 
 vector<vector<double>> dataset;
-                               
+                              
 vector<dataRecord> ds = readDS(dsin, lenDsin);
 vector<bool> ifLocal;
+vector<uint16_t> wis;
 
 for(uint i=0; i<ds.size(); ++i){
   dataset.push_back(ds[i].fields);
   ifLocal.push_back(localnode == ds[i].nodeId);
+  wis.push_back(ds[i].wi);
 }
 
-vector<Row> out_data= dbscan(dataset,minpts,eps,ifLocal);
+vector<Row> out_data= dbscan(dataset,minpts,eps,ifLocal,wis);
 
 vector<retRecord> retDs;
 
@@ -321,7 +326,7 @@ for(uint i=0;i<out_data.size();i++){
 }
 
 __result = writeDS(retDs, __lenResult);
-  
+
 ENDC++;
 
 OUTPUT(locDBSCAN(raw,0.1,1));
