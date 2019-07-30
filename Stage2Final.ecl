@@ -1,38 +1,51 @@
 IMPORT ML_Core;
+IMPORT ML_Core.Types AS Types;
+IMPORT STD.system.Thorlib;
 IMPORT Files;
-IMPORT Std.system.Thorlib;
 
-raw := DATASET([
-{1,1,1,0,[0.5,0.1,0.2,0.4,0.7],false,false},
-{1,2,2,0,[0.5,0.0,0.2,0.4,0.9],false,false},
-{1,3,3,0,[2,1,2,4,7],false,false},
-{1,4,4,0,[0.5,0.1,0.2,0.4,0.7],false,false},
-{1,5,5,0,[0.5,0.0,0.2,0.4,0.9],false,false}
-], Files.l_stage2);
+//Load raw data
+//**make sure the id of the data is sequential starting from 1
+ds := Files.trainRecs;
+//Add ID field and transform
+//the raw data to NumericField type
+ML_Core.AppendSeqID(ds, id, recs);
+ML_Core.ToField(recs, recsNF);
+OUTPUT(recsNF, NAMED('recsNF'));
 
-//Stage2 : local DBSCAN
+Xnf := PROJECT(recsNF,TRANSFORM(Types.NumericField,
+                                SELF.wi := IF(LEFT.id > 50,2,1),
+                                SELF := LEFT));
 
-// Definitions
-//remotePoints := dsIn(nodeid <> localNode); //set if_local = FALSE
-//localPoints := dsIn(nodeid = localNode);   //set if_local = TRUE
-//
-// For x in localPoints:
-//   N = GetNeighbors(x);
-//   If N > minPt:
-//     mark x as core point (if_core = TRUE)
-//     for y in N:
-//       if y is local point
-//         if y is core point
-//            Union(x, y)
-//         else if y is not yet member of any cluster then
-//            Union(x, y)
-//       if y is remote point:
-//         m = GetNeighbors(y);
-//         If m > minPt:
-//           mark y as core point (if_core = TRUE)
-//         Union(x, y)
+//Evenly distribute the data
+Xnf1 := DISTRIBUTE(Xnf, id);
+//Transform to 1_stage1
+X0 := PROJECT(Xnf1, TRANSFORM(
+                              Files.l_stage1,
+                              SELF.fields := [LEFT.value],
+                              SELF.nodeId := Thorlib.node(),
+                              SELF := LEFT),
+                              LOCAL);
+X1 := SORT(X0, wi, id, number, LOCAL);
+X2 := ROLLUP(X1, TRANSFORM(
+                            Files.l_stage1,
+                            SELF.fields := LEFT.fields + RIGHT.fields,
+                            SELF := LEFT),
+                            wi, id,
+                            LOCAL);
+//Transform to l_stage2
+X3 := PROJECT(X2, TRANSFORM(
+                            Files.l_stage2,
+                            SELF.parentID := LEFT.id,
+                            SELF := LEFT),
+                            LOCAL);
+OUTPUT(X2, NAMED('X2'));
+OUTPUT(X3, NAMED('X3'));
+// o := TABLE(X2, {nodeid, INTEGER cnt := COUNT(GROUP)}, nodeid);
+// OUTPUT(o);
 
-//pseudo code for local DBSCAN
+//Braodcast for local clustering.
+X := DISTRIBUTE(X3, ALL);
+
 DATASET(Files.l_stage3) locDBSCAN(DATASET(Files.l_stage2) dsIn, //distributed data from stage 1
                                   REAL8 eps,   //distance threshold
                                   UNSIGNED minPts, //the minimum number of points required to form a cluster,
@@ -41,7 +54,7 @@ DATASET(Files.l_stage3) locDBSCAN(DATASET(Files.l_stage2) dsIn, //distributed da
 
 #include <iostream>
 #include <bits/stdc++.h>
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 
@@ -76,7 +89,7 @@ vector<dataRecord> readDS(const void *s, uint32_t len){
     temp.if_core = *((bool*)p); p += sizeof(bool);
     ret.push_back(temp);
     int sizeStruct = sizeof(uint16_t) + 3*sizeof(unsigned long long) +
-                     3*sizeof(bool) + sizeof(uint32_t) + temp.lenFields;
+                    3*sizeof(bool) + sizeof(uint32_t) + temp.lenFields;
     len -= sizeStruct;
   }
   return ret;
@@ -110,9 +123,9 @@ void* writeDS(vector<retRecord> ds, uint32_t& len){
 
 struct node
 {
-	int data;
-	node* parent=NULL;
-	vector<node *> child;
+  int data;
+  node* parent=NULL;
+  vector<node *> child;
 };
 
 struct row
@@ -126,8 +139,8 @@ typedef struct node* Node;
 typedef struct row* Row;
 
 Node newNode(int data){
-	Node n=new struct node;
-	n->data=data;
+  Node n=new struct node;
+  n->data=data;
     return n;	
 }
 
@@ -135,8 +148,8 @@ Node find(Node y){
 
     if(y==NULL){
             return NULL;
-	 }
-   return (y->parent)==NULL?y:find(y->parent);
+  }
+  return (y->parent)==NULL?y:find(y->parent);
 }
 
 
@@ -146,37 +159,37 @@ Node unionOp(Node x,Node y)
 
   // cout<<"INSIDE "<<x->data<<"INSDIE";
   if(find(y)==y)
-   {
-     if(x->data>y->data){
-     (x->child).push_back(y);
-     y->parent=x;     
-     }
-     else
-     {
-       (y->child).push_back(x);
-     x->parent=y; 
-     }
-     
-     return find(x);
-   }
+  {
+    if(x->data>y->data){
+    (x->child).push_back(y);
+    y->parent=x;     
+    }
+    else
+    {
+      (y->child).push_back(x);
+    x->parent=y; 
+    }
+    
+    return find(x);
+  }
   else if(find(x)==find(y)){  
         return find(x);
-   }
+  }
     else
-   {
-       if(find(x)->data>find(y)->data){
+  {
+      if(find(x)->data>find(y)->data){
         (find(x)->child).push_back(find(y));
         (find(y)->parent)=find(x);
-	    return find(x);
-	   
-	   }
-       else{
-       	(find(y)->child).push_back(find(x));
+      return find(x);
+    
+    }
+      else{
+        (find(y)->child).push_back(find(x));
         (find(x)->parent)=find(y);
         return find(y);
-		}
-       
-   }
+    }
+      
+  }
 
 
 }
@@ -186,9 +199,9 @@ double euclidean(Row row1,Row row2){
     int M=row1->fields.size();
     
     for(int i=0;i<M;i++)
-    ans=ans+(pow((row1->fields[i])-(row2->fields[i]),2));
+    ans+=((row1->fields[i])-(row2->fields[i]))*((row1->fields[i])-(row2->fields[i]));
 
-    return ans;
+    return sqrt(ans);
 }
 
 vector<int> visited;
@@ -228,10 +241,13 @@ vector<Row> initialise(vector<vector<double>> dataset){
     return data;
 }
 
-vector<Row> getNeighrestNeighbours(vector<Row> dataset, Row row, double eps){
+vector<Row> getNeighrestNeighbours(vector<Row> dataset, Row row, double eps, vector<uint16_t> wis, uint16_t wi){
     vector<Row> neighbours;
     for(int i=0;i<dataset.size();i++){
         if(dataset[i]==row)
+        continue;
+
+        if(wis[i] != wi)
         continue;
 
         double dist = euclidean(dataset[i],row);
@@ -242,7 +258,7 @@ vector<Row> getNeighrestNeighbours(vector<Row> dataset, Row row, double eps){
     return neighbours;
 }
 
-vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps,vector<bool> ifLocal){
+vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps,vector<bool> ifLocal, vector<uint16_t> wis){
     vector<Row> transdataset=initialise(dataset);
     vector<Row> neighs;
     Node temp;
@@ -252,7 +268,7 @@ vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps,vecto
         
         if(!ifLocal[ro]) continue;
 
-        neighs=getNeighrestNeighbours(transdataset,transdataset[ro],eps);
+        neighs=getNeighrestNeighbours(transdataset,transdataset[ro],eps,wis,wis[ro]);
         
         if(neighs.size()>=minpoints){
             core[ro]=1;
@@ -281,7 +297,7 @@ vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps,vecto
                     }
                 } else {
                     // Remote neighbour
-                    vector<Row> tempNeighs = getNeighrestNeighbours(transdataset,transdataset[neighId],eps);
+                    vector<Row> tempNeighs = getNeighrestNeighbours(transdataset,transdataset[neighId],eps,wis,wis[neighId]);
                     if(tempNeighs.size() >= minpoints)
                         core[neighId] = 1;
                     unionOp(&transdataset[ro]->id,&neighs[neigh]->id);
@@ -295,16 +311,18 @@ vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps,vecto
 #body
 
 vector<vector<double>> dataset;
-                               
+                              
 vector<dataRecord> ds = readDS(dsin, lenDsin);
 vector<bool> ifLocal;
+vector<uint16_t> wis;
 
 for(uint i=0; i<ds.size(); ++i){
   dataset.push_back(ds[i].fields);
   ifLocal.push_back(localnode == ds[i].nodeId);
+  wis.push_back(ds[i].wi);
 }
 
-vector<Row> out_data= dbscan(dataset,minpts,eps,ifLocal);
+vector<Row> out_data= dbscan(dataset,minpts,eps,ifLocal,wis);
 
 vector<retRecord> retDs;
 
@@ -321,7 +339,7 @@ for(uint i=0;i<out_data.size();i++){
 }
 
 __result = writeDS(retDs, __lenResult);
-  
+
 ENDC++;
 
-OUTPUT(locDBSCAN(raw,0.1,1));
+OUTPUT(locDBSCAN(X,0.5,5));
