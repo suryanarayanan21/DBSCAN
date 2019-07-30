@@ -1,38 +1,51 @@
 IMPORT ML_Core;
+IMPORT ML_Core.Types AS Types;
+IMPORT STD.system.Thorlib;
 IMPORT Files;
-IMPORT Std.system.Thorlib;
 
-raw := DATASET([
-{1,1,1,0,[0.5,0.1,0.2,0.4,0.7],false,false},
-{1,2,2,0,[0.5,0.0,0.2,0.4,0.9],false,false},
-{1,3,3,0,[2,1,2,4,7],false,false},
-{1,4,4,0,[0.5,0.1,0.2,0.4,0.7],false,false},
-{1,5,5,0,[0.5,0.0,0.2,0.4,0.9],false,false}
-], Files.l_stage2);
+//Load raw data
+//**make sure the id of the data is sequential starting from 1
+ds := Files.trainRecs;
+//Add ID field and transform
+//the raw data to NumericField type
+ML_Core.AppendSeqID(ds, id, recs);
+ML_Core.ToField(recs, recsNF);
+OUTPUT(recsNF, NAMED('recsNF'));
 
-//Stage2 : local DBSCAN
+Xnf := PROJECT(recsNF,TRANSFORM(Types.NumericField,
+                                SELF.wi := IF(LEFT.id > 50,2,1),
+                                SELF := LEFT));
 
-// Definitions
-//remotePoints := dsIn(nodeid <> localNode); //set if_local = FALSE
-//localPoints := dsIn(nodeid = localNode);   //set if_local = TRUE
-//
-// For x in localPoints:
-//   N = GetNeighbors(x);
-//   If N > minPt:
-//     mark x as core point (if_core = TRUE)
-//     for y in N:
-//       if y is local point
-//         if y is core point
-//            Union(x, y)
-//         else if y is not yet member of any cluster then
-//            Union(x, y)
-//       if y is remote point:
-//         m = GetNeighbors(y);
-//         If m > minPt:
-//           mark y as core point (if_core = TRUE)
-//         Union(x, y)
+//Evenly distribute the data
+Xnf1 := DISTRIBUTE(Xnf, id);
+//Transform to 1_stage1
+X0 := PROJECT(Xnf1, TRANSFORM(
+                              Files.l_stage1,
+                              SELF.fields := [LEFT.value],
+                              SELF.nodeId := Thorlib.node(),
+                              SELF := LEFT),
+                              LOCAL);
+X1 := SORT(X0, wi, id, number, LOCAL);
+X2 := ROLLUP(X1, TRANSFORM(
+                            Files.l_stage1,
+                            SELF.fields := LEFT.fields + RIGHT.fields,
+                            SELF := LEFT),
+                            wi, id,
+                            LOCAL);
+//Transform to l_stage2
+X3 := PROJECT(X2, TRANSFORM(
+                            Files.l_stage2,
+                            SELF.parentID := LEFT.id,
+                            SELF := LEFT),
+                            LOCAL);
+OUTPUT(X2, NAMED('X2'));
+OUTPUT(X3, NAMED('X3'));
+// o := TABLE(X2, {nodeid, INTEGER cnt := COUNT(GROUP)}, nodeid);
+// OUTPUT(o);
 
-//pseudo code for local DBSCAN
+//Braodcast for local clustering.
+X := DISTRIBUTE(X3, ALL);
+
 DATASET(Files.l_stage3) locDBSCAN(DATASET(Files.l_stage2) dsIn, //distributed data from stage 1
                                   REAL8 eps,   //distance threshold
                                   UNSIGNED minPts, //the minimum number of points required to form a cluster,
@@ -41,7 +54,7 @@ DATASET(Files.l_stage3) locDBSCAN(DATASET(Files.l_stage2) dsIn, //distributed da
 
 #include <iostream>
 #include <bits/stdc++.h>
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 
@@ -186,9 +199,9 @@ double euclidean(Row row1,Row row2){
     int M=row1->fields.size();
     
     for(int i=0;i<M;i++)
-    ans=ans+(pow((row1->fields[i])-(row2->fields[i]),2));
+    ans+=((row1->fields[i])-(row2->fields[i]))*((row1->fields[i])-(row2->fields[i]));
 
-    return ans;
+    return sqrt(ans);
 }
 
 vector<int> visited;
@@ -329,4 +342,4 @@ __result = writeDS(retDs, __lenResult);
 
 ENDC++;
 
-OUTPUT(locDBSCAN(raw,0.1,1));
+OUTPUT(locDBSCAN(X,0.5,5));
