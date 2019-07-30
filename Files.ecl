@@ -130,4 +130,13 @@ EXPORT l_stage2 := RECORD
     BOOLEAN if_core := FALSE;
 END;
 
+EXPORT l_stage3 := RECORD
+UNSIGNED4 wi;
+UNSIGNED4 nodeid;
+UNSIGNED4 id;
+UNSIGNED4 parentID;
+BOOLEAN   if_local := FALSE;
+BOOLEAN   if_core := FALSE;
+END;
+
 END;
