@@ -10,14 +10,9 @@ ds := Files.trainRecs;
 //the raw data to NumericField type
 ML_Core.AppendSeqID(ds, id, recs);
 ML_Core.ToField(recs, recsNF);
-OUTPUT(recsNF, NAMED('recsNF'));
-
-Xnf := PROJECT(recsNF,TRANSFORM(Types.NumericField,
-                                SELF.wi := IF(LEFT.id > 50,2,1),
-                                SELF := LEFT));
 
 //Evenly distribute the data
-Xnf1 := DISTRIBUTE(Xnf, id);
+Xnf1 := DISTRIBUTE(recsNF, id);
 //Transform to 1_stage1
 X0 := PROJECT(Xnf1, TRANSFORM(
                               Files.l_stage1,
@@ -38,19 +33,12 @@ X3 := PROJECT(X2, TRANSFORM(
                             SELF.parentID := LEFT.id,
                             SELF := LEFT),
                             LOCAL);
-OUTPUT(X2, NAMED('X2'));
-OUTPUT(X3, NAMED('X3'));
-// o := TABLE(X2, {nodeid, INTEGER cnt := COUNT(GROUP)}, nodeid);
-// OUTPUT(o);
-
-//Braodcast for local clustering.
-X := DISTRIBUTE(X3, ALL);
 
 DATASET(Files.l_stage3) locDBSCAN(DATASET(Files.l_stage2) dsIn, //distributed data from stage 1
                                   REAL8 eps,   //distance threshold
                                   UNSIGNED minPts, //the minimum number of points required to form a cluster,
-                                  UNSIGNED localNode = Thorlib.node()
-                                  ) := EMBED(C++)
+                                  UNSIGNED4 localNode = Thorlib.node()
+                                  ) := EMBED(C++ : activity)
 
 #include <iostream>
 #include <bits/stdc++.h>
@@ -258,7 +246,7 @@ vector<Row> getNeighrestNeighbours(vector<Row> dataset, Row row, double eps, vec
     return neighbours;
 }
 
-vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps,vector<bool> ifLocal, vector<uint16_t> wis){
+vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps,vector<bool> ifLocal, vector<uint16_t> wis, vector<bool> &isModified){
     vector<Row> transdataset=initialise(dataset);
     vector<Row> neighs;
     Node temp;
@@ -275,6 +263,7 @@ vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps,vecto
             
             for(int neigh=0;neigh<neighs.size();neigh++){
                 int neighId = neighs[neigh]->actual_id;
+                isModified[neighId] = true;
                 if(ifLocal[neighId]){
                     // Local neighbour
                     temp1=core[neighId];
@@ -310,36 +299,41 @@ vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps,vecto
 
 #body
 
+unsigned long long lnode = localnode;
+
 vector<vector<double>> dataset;
                               
 vector<dataRecord> ds = readDS(dsin, lenDsin);
 vector<bool> ifLocal;
 vector<uint16_t> wis;
+vector<bool> isModified;
 
 for(uint i=0; i<ds.size(); ++i){
   dataset.push_back(ds[i].fields);
-  ifLocal.push_back(localnode == ds[i].nodeId);
+  ifLocal.push_back(lnode == ds[i].nodeId);
+  isModified.push_back(lnode == ds[i].nodeId);
   wis.push_back(ds[i].wi);
 }
 
-vector<Row> out_data= dbscan(dataset,minpts,eps,ifLocal,wis);
+vector<Row> out_data= dbscan(dataset,minpts,eps,ifLocal,wis,isModified);
 
 vector<retRecord> retDs;
 
 for(uint i=0;i<out_data.size();i++){
+  if(!isModified[i]) continue;
   Node dat=find(&out_data[i]->id);
   retRecord temp;
   temp.wi = ds[i].wi;
   temp.id = ds[i].id;
   temp.parentId = ds[dat->data].id;
-  temp.nodeId = localnode;
-  temp.if_local = ds[i].if_local;
+  temp.nodeId = lnode;
+  temp.if_local = ifLocal[i];
   temp.if_core = core[i];
   retDs.push_back(temp);
 }
 
 __result = writeDS(retDs, __lenResult);
 
-ENDC++;
+ENDEMBED;
 
-OUTPUT(locDBSCAN(X,0.5,5));
+OUTPUT(locDBSCAN(X3,0.5,5));
