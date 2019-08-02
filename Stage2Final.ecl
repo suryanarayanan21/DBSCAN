@@ -39,8 +39,7 @@ X := DISTRIBUTE(X3, ALL);
 STREAMED DATASET(Files.l_stage3) locDBSCAN(STREAMED DATASET(Files.l_stage2) dsIn, //distributed data from stage 1
                                   REAL8 eps,   //distance threshold
                                   UNSIGNED minPts, //the minimum number of points required to form a cluster,
-                                  UNSIGNED4 localNode = Thorlib.node(),
-                                  UNSIGNED4 lendsin = COUNT(dsIn)
+                                  UNSIGNED4 localNode = Thorlib.node()
                                   ) := EMBED(C++ : activity)
 
 #include <iostream>
