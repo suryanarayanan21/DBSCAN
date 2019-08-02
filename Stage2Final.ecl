@@ -34,10 +34,13 @@ X3 := PROJECT(X2, TRANSFORM(
                             SELF := LEFT),
                             LOCAL);
 
-DATASET(Files.l_stage3) locDBSCAN(DATASET(Files.l_stage2) dsIn, //distributed data from stage 1
+X := DISTRIBUTE(X3, ALL);
+
+STREAMED DATASET(Files.l_stage3) locDBSCAN(STREAMED DATASET(Files.l_stage2) dsIn, //distributed data from stage 1
                                   REAL8 eps,   //distance threshold
                                   UNSIGNED minPts, //the minimum number of points required to form a cluster,
-                                  UNSIGNED4 localNode = Thorlib.node()
+                                  UNSIGNED4 localNode = Thorlib.node(),
+                                  UNSIGNED4 lendsin = COUNT(dsIn)
                                   ) := EMBED(C++ : activity)
 
 #include <iostream>
@@ -58,31 +61,6 @@ struct dataRecord{
   bool if_core;
 };
 
-vector<dataRecord> readDS(const void *s, uint32_t len){
-  vector<dataRecord> ret;
-  char* p = (char*)s;
-  while(len){
-    dataRecord temp;
-    temp.wi = *((uint16_t*)p); p += sizeof(uint16_t);
-    temp.id = *((unsigned long long*)p); p += sizeof(unsigned long long);
-    temp.parentId = *((unsigned long long*)p); p += sizeof(unsigned long long);
-    temp.nodeId = *((unsigned long long*)p); p += sizeof(unsigned long long);
-    temp.isAllFields = *((bool*)p); p += sizeof(bool);
-    temp.lenFields = *((uint32_t*)p); p += sizeof(uint32_t);
-    for(int i=0; i<temp.lenFields/sizeof(float); ++i){
-      double f = (double)(*((float*)p)); p += sizeof(float);
-      temp.fields.push_back(f);
-    }
-    temp.if_local = *((bool*)p); p += sizeof(bool);
-    temp.if_core = *((bool*)p); p += sizeof(bool);
-    ret.push_back(temp);
-    int sizeStruct = sizeof(uint16_t) + 3*sizeof(unsigned long long) +
-                    3*sizeof(bool) + sizeof(uint32_t) + temp.lenFields;
-    len -= sizeStruct;
-  }
-  return ret;
-}
-
 struct retRecord{
   uint16_t wi;
   unsigned long long id;
@@ -91,23 +69,6 @@ struct retRecord{
   bool if_local;
   bool if_core;
 };
-
-void* writeDS(vector<retRecord> ds, uint32_t& len){
-  uint32_t lenRec = sizeof(uint16_t) + 3*sizeof(unsigned long long) + 2*sizeof(bool);
-  uint32_t totLen = ds.size() * lenRec;
-  len = totLen;
-  void* r = rtlMalloc(totLen);
-  char* p = (char*)r;
-  for(uint i=0; i<ds.size(); ++i){
-    *((uint16_t*)p) = ds[i].wi; p += sizeof(uint16_t);
-    *((unsigned long long*)p) = ds[i].id; p += sizeof(unsigned long long);
-    *((unsigned long long*)p) = ds[i].parentId; p += sizeof(unsigned long long);
-    *((unsigned long long*)p) = ds[i].nodeId; p += sizeof(unsigned long long);
-    *((bool*)p) = ds[i].if_local; p += sizeof(bool);
-    *((bool*)p) = ds[i].if_core; p += sizeof(bool);
-  }
-  return r;
-}
 
 struct node
 {
@@ -297,43 +258,95 @@ vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps,vecto
     return transdataset;
 }
 
+class ResultStream : public RtlCInterface, implements IRowStream {
+  public:
+  ResultStream(IEngineRowAllocator *_ra, IRowStream *_ds, int minpts, double eps, unsigned long long lnode)
+  : ra(_ra), ds(_ds){
+    byte* p;
+    count = 0;
+    while((p=(byte*)ds->nextRow())){
+      dataRecord temp;
+      temp.wi = *((uint16_t*)p); p += sizeof(uint16_t);
+      temp.id = *((unsigned long long*)p); p += sizeof(unsigned long long);
+      temp.parentId = *((unsigned long long*)p); p += sizeof(unsigned long long);
+      temp.nodeId = *((unsigned long long*)p); p += sizeof(unsigned long long);
+      temp.isAllFields = *((bool*)p); p += sizeof(bool);
+      temp.lenFields = *((uint32_t*)p); p += sizeof(uint32_t);
+      for(int i=0; i<temp.lenFields/sizeof(float); ++i){
+        double f = (double)(*((float*)p)); p += sizeof(float);
+        temp.fields.push_back(f);
+      }
+      temp.if_local = *((bool*)p); p += sizeof(bool);
+      temp.if_core = *((bool*)p);
+      items.push_back(temp);
+    }
+
+    vector<vector<double>> dataset;
+    vector<bool> ifLocal;
+    vector<uint16_t> wis;
+    vector<bool> isModified;
+
+    for(uint i=0; i<items.size(); ++i){
+      dataset.push_back(items[i].fields);
+      ifLocal.push_back(lnode == items[i].nodeId);
+      isModified.push_back(lnode == items[i].nodeId);
+      wis.push_back(items[i].wi);
+    }
+
+    vector<Row> out_data = dbscan(dataset,minpts,eps,ifLocal,wis,isModified);
+
+    for(uint i=0;i<out_data.size();i++){
+      if(!isModified[i]) continue;
+      Node dat=find(&out_data[i]->id);
+      retRecord temp;
+      temp.wi = items[i].wi;
+      temp.id = items[i].id;
+      temp.parentId = items[dat->data].id;
+      temp.nodeId = lnode;
+      temp.if_local = ifLocal[i];
+      temp.if_core = core[i];
+      retDs.push_back(temp);
+    }
+  }
+
+  RTLIMPLEMENT_IINTERFACE
+  virtual const void* nextRow() override {
+    RtlDynamicRowBuilder rowBuilder(ra);
+    if(count < retDs.size()){
+
+      uint32_t lenRec = sizeof(uint16_t) + 3*sizeof(unsigned long long) + 2*sizeof(bool);
+      byte* p = (byte*)rowBuilder.ensureCapacity(lenRec, NULL);
+
+      int i = count;
+      *((uint16_t*)p) = retDs[i].wi; p += sizeof(uint16_t);
+      *((unsigned long long*)p) = retDs[i].id; p += sizeof(unsigned long long);
+      *((unsigned long long*)p) = retDs[i].parentId; p += sizeof(unsigned long long);
+      *((unsigned long long*)p) = retDs[i].nodeId; p += sizeof(unsigned long long);
+      *((bool*)p) = retDs[i].if_local; p += sizeof(bool);
+      *((bool*)p) = retDs[i].if_core;
+
+      count++;
+      return rowBuilder.finalizeRowClear(lenRec);
+    } else {
+      return NULL;
+    }
+  }
+
+  virtual void stop() override{}
+
+  protected:
+  Linked<IEngineRowAllocator> ra;
+  unsigned count;
+  vector<dataRecord> items;
+  vector<Row> out_data;
+  vector<retRecord> retDs;
+  IRowStream *ds;
+};
+
 #body
 
-unsigned long long lnode = localnode;
-
-vector<vector<double>> dataset;
-                              
-vector<dataRecord> ds = readDS(dsin, lenDsin);
-vector<bool> ifLocal;
-vector<uint16_t> wis;
-vector<bool> isModified;
-
-for(uint i=0; i<ds.size(); ++i){
-  dataset.push_back(ds[i].fields);
-  ifLocal.push_back(lnode == ds[i].nodeId);
-  isModified.push_back(lnode == ds[i].nodeId);
-  wis.push_back(ds[i].wi);
-}
-
-vector<Row> out_data= dbscan(dataset,minpts,eps,ifLocal,wis,isModified);
-
-vector<retRecord> retDs;
-
-for(uint i=0;i<out_data.size();i++){
-  if(!isModified[i]) continue;
-  Node dat=find(&out_data[i]->id);
-  retRecord temp;
-  temp.wi = ds[i].wi;
-  temp.id = ds[i].id;
-  temp.parentId = ds[dat->data].id;
-  temp.nodeId = lnode;
-  temp.if_local = ifLocal[i];
-  temp.if_core = core[i];
-  retDs.push_back(temp);
-}
-
-__result = writeDS(retDs, __lenResult);
+return new ResultStream(_resultAllocator, dsin, minpts, eps, localnode);
 
 ENDEMBED;
 
-OUTPUT(locDBSCAN(X3,0.5,5));
+OUTPUT(locDBSCAN(X,0.5,5));
