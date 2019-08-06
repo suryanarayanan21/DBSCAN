@@ -117,6 +117,17 @@ EXPORT l_stage1 := RECORD
     SET OF REAL4 fields;
 END;
 
+EXPORT testset0 := DATASET([
+                            {3,4,1},
+                            {2,3,1},
+                            {3,3,1},
+                            {4,3,1},
+                            {3,2,1},
+                            {8,4,2},
+                            {7,3,2},
+                            {8,3,2},
+                            {9,3,2},
+                            {8,2,2}], Layout);
 
 // l_stage2:the dataframe of the result of stage 1
 // which will feed to stage 2 for local clustering.
