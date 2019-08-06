@@ -61,10 +61,10 @@ struct dataRecord{
 };
 
 struct retRecord{
-  uint16_t wi;
-  unsigned long long id;
-  unsigned long long parentId;
-  unsigned long long nodeId;
+  uint32_t wi;
+  uint32_t id;
+  uint32_t parentId;
+  uint32_t nodeId;
   bool if_local;
   bool if_core;
 };
@@ -123,23 +123,17 @@ Node unionOp(Node x,Node y)
   else if(find(x)==find(y)){  
         return find(x);
   }
-    else
-  {
+    else {
       if(find(x)->data>find(y)->data){
         (find(x)->child).push_back(find(y));
         (find(y)->parent)=find(x);
       return find(x);
-    
-    }
-      else{
+    } else {
         (find(y)->child).push_back(find(x));
         (find(x)->parent)=find(y);
         return find(y);
-    }
-      
+    }   
   }
-
-
 }
 
 double euclidean(Row row1,Row row2){
@@ -150,6 +144,33 @@ double euclidean(Row row1,Row row2){
     ans+=((row1->fields[i])-(row2->fields[i]))*((row1->fields[i])-(row2->fields[i]));
 
     return sqrt(ans);
+}
+
+double haversine(Row row1,Row row2){
+    int M=row1->fields.size();
+    if(M!=2){
+        cout<<"Haversine can be applied only for 2 dimensions"<<endl;
+        exit(-1);
+    }
+    double lat1=row1->fields[0];
+    double lat2=row2->fields[0];
+    double lon1=row1->fields[1];
+    double lon2=row2->fields[1];
+
+    double sin_0 = sin(0.5 * (lat1 - lat2));
+    double sin_1 = sin(0.5 * (lon1 - lon2));
+    return (sin_0 * sin_0 + cos(lat1) * cos(lat2) * sin_1 * sin_1);
+}
+
+
+double manhattan(Row row1,Row row2){
+    double ans=0;
+    int M=row1->fields.size();
+    
+    for(int i=0;i<M;i++)
+    ans=ans+(abs((row1->fields[i])-(row2->fields[i])));
+
+    return ans;
 }
 
 vector<int> visited;
@@ -313,14 +334,14 @@ class ResultStream : public RtlCInterface, implements IRowStream {
     RtlDynamicRowBuilder rowBuilder(ra);
     if(count < retDs.size()){
 
-      uint32_t lenRec = sizeof(uint16_t) + 3*sizeof(unsigned long long) + 2*sizeof(bool);
+      uint32_t lenRec = 4*sizeof(uint32_t) + 2*sizeof(bool);
       byte* p = (byte*)rowBuilder.ensureCapacity(lenRec, NULL);
 
       int i = count;
-      *((uint16_t*)p) = retDs[i].wi; p += sizeof(uint16_t);
-      *((unsigned long long*)p) = retDs[i].id; p += sizeof(unsigned long long);
-      *((unsigned long long*)p) = retDs[i].parentId; p += sizeof(unsigned long long);
-      *((unsigned long long*)p) = retDs[i].nodeId; p += sizeof(unsigned long long);
+      *((uint32_t*)p) = retDs[i].wi; p += sizeof(uint32_t);
+      *((uint32_t*)p) = retDs[i].nodeId; p += sizeof(uint32_t);
+      *((uint32_t*)p) = retDs[i].id; p += sizeof(uint32_t);
+      *((uint32_t*)p) = retDs[i].parentId; p += sizeof(uint32_t);
       *((bool*)p) = retDs[i].if_local; p += sizeof(bool);
       *((bool*)p) = retDs[i].if_core;
 
