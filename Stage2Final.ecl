@@ -203,6 +203,20 @@ double ans=0, a1=0,a2=0;
 
 }
 
+double chebyshev(Row row1,Row row2)
+{
+        // max(|x - y|)
+
+        int m=row1->fields.size();
+        double ans=0;
+        for(int i=0;i<m;i++){
+                ans=max(abs(row1->fields[i]-row2->fields[i]),ans);
+        }
+
+        return ans;
+
+}
+
 vector<int> visited;
 vector<int> core;
 string distanceFunc = "euclidian";
@@ -261,6 +275,8 @@ vector<Row> getNeighrestNeighbours(vector<Row> dataset, Row row, double eps, vec
           dist = minkowski(dataset[i],row,(int)dist_params[0]);
         else if(distanceFunc.compare("cosine") == 0)
           dist = cosine(dataset[i],row);
+        else if(distanceFunc.compare("chebyshev") == 0)
+          dist = chebyshev(dataset[i],row);
         else
           dist = euclidean(dataset[i],row);
         
