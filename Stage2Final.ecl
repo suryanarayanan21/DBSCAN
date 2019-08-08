@@ -39,6 +39,8 @@ X := DISTRIBUTE(X3, ALL);
 STREAMED DATASET(Files.l_stage3) locDBSCAN(STREAMED DATASET(Files.l_stage2) dsIn, //distributed data from stage 1
                                   REAL8 eps,   //distance threshold
                                   UNSIGNED minPts, //the minimum number of points required to form a cluster,
+                                  STRING distance_func = 'Euclidian',
+                                  SET OF REAL8 params = [],
                                   UNSIGNED4 localNode = Thorlib.node()
                                   ) := EMBED(C++ : activity)
 
@@ -173,8 +175,38 @@ double manhattan(Row row1,Row row2){
     return ans;
 }
 
+double minkowski(Row row1,Row row2,int p)
+{
+        // sum(|x - y|^p)^(1/p)
+
+        int m=row1->fields.size();
+        double ans=0;
+        for(int i=0;i<m;i++){
+                ans+=pow(abs(row1->fields[i]-row2->fields[i]),p);
+        }
+
+        return pow(ans,(double)1/p);
+
+}
+
+double cosine(Row row1,Row row2){
+double ans=0, a1=0,a2=0;
+
+        int m=row1->fields.size();
+        for(int i=0;i<m;i++){
+                ans+=row1->fields[i]*row2->fields[i];
+                a1=a1+pow(row1->fields[i],2);
+                a2=a2+pow(row2->fields[i],2);
+        }
+
+        return ans/(sqrt(a1)*sqrt(a2));
+
+}
+
 vector<int> visited;
 vector<int> core;
+string distanceFunc = "euclidian";
+vector<double> dist_params;
 
 Row newRow( int id){
     Row newrow=new struct row;
@@ -219,7 +251,19 @@ vector<Row> getNeighrestNeighbours(vector<Row> dataset, Row row, double eps, vec
         if(wis[i] != wi)
         continue;
 
-        double dist = euclidean(dataset[i],row);
+        double dist;
+
+        if(distanceFunc.compare("manhattan") == 0)
+          dist = manhattan(dataset[i],row);
+        else if(distanceFunc.compare("haversine") == 0)
+          dist = haversine(dataset[i],row);
+        else if(distanceFunc.compare("minkowski") == 0)
+          dist = minkowski(dataset[i],row,(int)dist_params[0]);
+        else if(distanceFunc.compare("cosine") == 0)
+          dist = cosine(dataset[i],row);
+        else
+          dist = euclidean(dataset[i],row);
+        
         if(dist<=eps){
             neighbours.push_back(dataset[i]);
         }
@@ -365,8 +409,16 @@ class ResultStream : public RtlCInterface, implements IRowStream {
 
 #body
 
+distanceFunc = distance_func;
+double* p = (double*)params;
+
+for(uint32_t i=0; i<lenParams/sizeof(double); ++i)
+  dist_params.push_back(*p);
+  p += sizeof(double);
+
+transform(distanceFunc.begin(),distanceFunc.end(),distanceFunc.begin(),::tolower);
 return new ResultStream(_resultAllocator, dsin, minpts, eps, localnode);
 
 ENDEMBED;
 
-OUTPUT(locDBSCAN(X,0.5,5));
+OUTPUT(locDBSCAN(X,0.5,5,'minkowski',[2]));
