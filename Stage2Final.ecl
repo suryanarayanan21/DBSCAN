@@ -108,7 +108,7 @@ Node unionOp(Node x,Node y)
 {
 
   // cout<<"INSIDE "<<x->data<<"INSDIE";
-  if(find(y)==y)
+  if(find(y)==y && find(x)==x)
   {
     if(x->data>y->data){
     (x->child).push_back(y);
@@ -299,7 +299,9 @@ vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps,vecto
 
         neighs=getNeighrestNeighbours(transdataset,transdataset[ro],eps,wis,wis[ro]);
         
-        if(neighs.size()>=minpoints){
+        //Here 1 indicates the point 'trandataset[ro]' itself. Refer https://en.wikipedia.org/wiki/DBSCAN#Original_Query-based_Algorithm
+
+        if(neighs.size()+1>=minpoints){
             core[ro]=1;
             
             for(int neigh=0;neigh<neighs.size();neigh++){
