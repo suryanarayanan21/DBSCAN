@@ -6,7 +6,7 @@ IMPORT Files;
 
 //Load raw data
 //**make sure the id of the data is sequential starting from 1
-ds := Files.trainRec2;
+ds := Files.testset0;
 //Add ID field and transform
 //the raw data to NumericField type
 ML_Core.AppendSeqID(ds, id, recs);
@@ -497,4 +497,4 @@ return new ResultStream(_resultAllocator, dsin, minpts, eps, localnode);
 
 ENDEMBED;
 
-OUTPUT(locDBSCAN(X,0.3,10,'euclidean'));
+OUTPUT(locDBSCAN(X,1,5,'euclidean'));

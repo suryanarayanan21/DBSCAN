@@ -1,0 +1,10 @@
+<Cache hash="-6408385762853286541">
+<Attr name="stage2final">
+ <Depend module="" name="ml_core"/>
+ <Depend module="_versions.ML_Core.V3_2_2.ML_Core" name="types"/>
+ <Depend module="std.system" name="thorlib"/>
+ <Depend module="" name="files"/>
+ <Depend module="_versions.ML_Core.V3_2_2.ML_Core" name="appendseqid"/>
+ <Depend module="_versions.ML_Core.V3_2_2.ML_Core" name="tofield"/>
+</Attr>
+</Cache>
