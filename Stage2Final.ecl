@@ -3,9 +3,10 @@ IMPORT ML_Core.Types AS Types;
 IMPORT STD.system.Thorlib;
 IMPORT Files;
 
+
 //Load raw data
 //**make sure the id of the data is sequential starting from 1
-ds := Files.trainRecs;
+ds := Files.testset0;
 //Add ID field and transform
 //the raw data to NumericField type
 ML_Core.AppendSeqID(ds, id, recs);
@@ -75,6 +76,7 @@ struct node
 {
   int data;
   node* parent=NULL;
+  int actual_id;
   vector<node *> child;
 };
 
@@ -82,7 +84,6 @@ struct row
 {
     vector<double> fields;
     struct node id;
-    int actual_id;
 };
 
 typedef struct node* Node;
@@ -107,7 +108,6 @@ Node find(Node y){
 Node unionOp(Node x,Node y)
 {
 
-  // cout<<"INSIDE "<<x->data<<"INSDIE";
   if(find(y)==y && find(x)==x)
   {
     if(x->data>y->data){
@@ -116,8 +116,10 @@ Node unionOp(Node x,Node y)
     }
     else
     {
+      
       (y->child).push_back(x);
-    x->parent=y; 
+      x->parent=y; 
+      return find(x);   
     }
     
     return find(x);
@@ -225,6 +227,7 @@ vector<double> dist_params;
 Row newRow( int id){
     Row newrow=new struct row;
     newrow->id.data=id;
+    newrow->id.actual_id=id;
     return newrow;
 }
 
@@ -250,7 +253,6 @@ vector<Row> initialise(vector<vector<double>> dataset){
         for(int j=0;j<M;j++){
             r->fields[j]=dataset[i][j];
         }
-        r->actual_id=i;
         data.push_back(r);
     }
     return data;
@@ -284,6 +286,7 @@ vector<Row> getNeighrestNeighbours(vector<Row> dataset, Row row, double eps, vec
             neighbours.push_back(dataset[i]);
         }
     }
+    // neighbours.push_back(row);
     return neighbours;
 }
 
@@ -293,19 +296,21 @@ vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps,vecto
     Node temp;
     int temp1;
     for(int ro=0;ro<transdataset.size();ro++){
-        cout<<"Processing"<<ro<<endl;
+        
         
         if(!ifLocal[ro]) continue;
 
         neighs=getNeighrestNeighbours(transdataset,transdataset[ro],eps,wis,wis[ro]);
-        
         //Here 1 indicates the point 'trandataset[ro]' itself. Refer https://en.wikipedia.org/wiki/DBSCAN#Original_Query-based_Algorithm
 
         if(neighs.size()+1>=minpoints){
             core[ro]=1;
+           
+           
             
+          
             for(int neigh=0;neigh<neighs.size();neigh++){
-                int neighId = neighs[neigh]->actual_id;
+                int neighId = neighs[neigh]->id.actual_id;
                 isModified[neighId] = true;
                 if(ifLocal[neighId]){
                     // Local neighbour
@@ -315,16 +320,16 @@ vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps,vecto
             
                         //modify parent id's
                         temp=unionOp(&transdataset[ro]->id,&neighs[neigh]->id);
-                        cout<<"\nThe parent is "<<temp->data<<endl;
+                        // cout<<"\nThe parent is "<<temp->data<<endl;
                     }
                     else
                     {
                         if(!visited[neighId]){
+                          
                             visited[neighId]=1;
                             // cout<<" Trying union for "<<transdataset[ro]->id.data<<" and "<<neighs[neigh]->id.data<<endl;
                         temp=unionOp(&transdataset[ro]->id,&neighs[neigh]->id);
-
-                        cout<<"\nThe parent is "<<temp->data<<endl;
+                         
                         }
                     }
                 } else {
@@ -335,10 +340,49 @@ vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps,vecto
                     unionOp(&transdataset[ro]->id,&neighs[neigh]->id);
                 }
             }
+            
+            
         }
     }
     return transdataset;
 }
+
+
+vector<pair<int,int>> getparent(Node node){
+    vector<pair<int,int>> cluster_members;
+    Node p=find(node);
+    if(p==node){
+        
+        cluster_members.push_back({node->actual_id,node->actual_id});
+        return cluster_members;
+    }
+    vector<int> members;
+    queue<Node> q;
+    q.push(p);
+    int max_core=INT_MIN;
+    while (!q.empty())
+    {
+        Node x=q.front();
+		q.pop();
+        members.push_back(x->actual_id);
+        if(core[x->actual_id]){
+        max_core=max(x->actual_id,max_core);
+        }
+        for(int i=0;i<x->child.size();i++){
+			q.push(x->child[i]);
+		}
+    }
+    for(int j=0;j<members.size();j++){
+        cluster_members.push_back({members[j],max_core});
+    }
+    
+    
+    return cluster_members;
+
+}
+
+
+
 
 class ResultStream : public RtlCInterface, implements IRowStream {
   public:
@@ -376,18 +420,32 @@ class ResultStream : public RtlCInterface, implements IRowStream {
     }
 
     vector<Row> out_data = dbscan(dataset,minpts,eps,ifLocal,wis,isModified);
+    
+    visited.clear();    
+    visited.resize(out_data.size(),0);
 
     for(uint i=0;i<out_data.size();i++){
       if(!isModified[i]) continue;
-      Node dat=find(&out_data[i]->id);
+      if(visited[i])
+        continue;
+      
+      vector<pair<int,int>> core_clusters=getparent(&out_data[i]->id);
+      visited[i]=1;
+      for(auto u: core_clusters){
+            visited[u.first]=1;
+            // out[i][j]=(double)u.second;
+        
+      // Node dat=find(&out_data[i]->id);
+
       retRecord temp;
-      temp.wi = items[i].wi;
-      temp.id = items[i].id;
-      temp.parentId = items[dat->data].id;
+      temp.wi = items[u.first].wi;
+      temp.id = items[u.first].id;
+      temp.parentId = items[u.second].id;
       temp.nodeId = lnode;
-      temp.if_local = ifLocal[i];
-      temp.if_core = core[i];
+      temp.if_local = ifLocal[u.first];
+      temp.if_core = core[u.first];
       retDs.push_back(temp);
+      }
     }
   }
 
@@ -439,4 +497,4 @@ return new ResultStream(_resultAllocator, dsin, minpts, eps, localnode);
 
 ENDEMBED;
 
-OUTPUT(locDBSCAN(X,0.5,5,'minkowski',[2]));
+OUTPUT(locDBSCAN(X,1,5,'euclidean'));
