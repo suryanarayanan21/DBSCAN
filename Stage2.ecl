@@ -39,7 +39,7 @@ struct retRecord{
 
 struct node
 {
-  int data;
+  uint32_t data;
   node* parent=NULL;
   vector<node *> child;
 };
@@ -54,7 +54,7 @@ struct row
 typedef struct node* Node;
 typedef struct row* Row;
 
-Node newNode(int data){
+Node newNode(uint32_t data){
   Node n=new struct node;
   n->data=data;
     return n;	
@@ -70,11 +70,12 @@ Node find(Node y){
 
 
 // returning the root of the tree
+
 Node unionOp(Node x,Node y)
 {
 
   // cout<<"INSIDE "<<x->data<<"INSDIE";
-  if(find(y)==y)
+  if(find(y)==y && find(x)==x)
   {
     if(x->data>y->data){
     (x->child).push_back(y);
@@ -194,7 +195,7 @@ Row newRow( int id){
     return newrow;
 }
 
-vector<Row> initialise(vector<vector<double>> dataset){
+vector<Row> initialise(vector<vector<double>> dataset, vector<uint32_t> ids){
     int N = dataset.size();
     int M = dataset[0].size();
     vector<Row> data;
@@ -210,7 +211,7 @@ vector<Row> initialise(vector<vector<double>> dataset){
 
         //initially each node is pointing to itself
         
-        Row r= newRow(i);
+        Row r= newRow(ids[i]);
         r->fields.resize(M);
         
         for(int j=0;j<M;j++){
@@ -253,8 +254,8 @@ vector<Row> getNeighrestNeighbours(vector<Row> dataset, Row row, double eps, vec
     return neighbours;
 }
 
-vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps,vector<bool> ifLocal, vector<uint16_t> wis, vector<bool> &isModified){
-    vector<Row> transdataset=initialise(dataset);
+vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps,vector<bool> ifLocal, vector<uint16_t> wis, vector<bool> &isModified, vector<uint32_t> ids){
+    vector<Row> transdataset=initialise(dataset,ids);
     vector<Row> neighs;
     Node temp;
     int temp1;
@@ -265,7 +266,9 @@ vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps,vecto
 
         neighs=getNeighrestNeighbours(transdataset,transdataset[ro],eps,wis,wis[ro]);
         
-        if(neighs.size()>=minpoints){
+        //Here 1 indicates the point 'trandataset[ro]' itself. Refer https://en.wikipedia.org/wiki/DBSCAN#Original_Query-based_Algorithm
+
+        if(neighs.size()+1>=minpoints){
             core[ro]=1;
             
             for(int neigh=0;neigh<neighs.size();neigh++){
@@ -294,7 +297,7 @@ vector<Row> dbscan(vector<vector<double>> dataset,int minpoints,double eps,vecto
                 } else {
                     // Remote neighbour
                     vector<Row> tempNeighs = getNeighrestNeighbours(transdataset,transdataset[neighId],eps,wis,wis[neighId]);
-                    if(tempNeighs.size() >= minpoints)
+                    if(tempNeighs.size()+1>= minpoints)
                         core[neighId] = 1;
                     unionOp(&transdataset[ro]->id,&neighs[neigh]->id);
                 }
@@ -331,15 +334,17 @@ class ResultStream : public RtlCInterface, implements IRowStream {
     vector<bool> ifLocal;
     vector<uint16_t> wis;
     vector<bool> isModified;
+    vector<uint32_t> ids;
 
     for(uint i=0; i<items.size(); ++i){
       dataset.push_back(items[i].fields);
       ifLocal.push_back(lnode == items[i].nodeId);
       isModified.push_back(lnode == items[i].nodeId);
       wis.push_back(items[i].wi);
+      ids.push_back(items[i].id);
     }
 
-    vector<Row> out_data = dbscan(dataset,minpts,eps,ifLocal,wis,isModified);
+    vector<Row> out_data = dbscan(dataset,minpts,eps,ifLocal,wis,isModified,ids);
 
     for(uint i=0;i<out_data.size();i++){
       if(!isModified[i]) continue;
@@ -347,7 +352,7 @@ class ResultStream : public RtlCInterface, implements IRowStream {
       retRecord temp;
       temp.wi = items[i].wi;
       temp.id = items[i].id;
-      temp.parentId = items[dat->data].id;
+      temp.parentId = dat->data;
       temp.nodeId = lnode;
       temp.if_local = ifLocal[i];
       temp.if_core = core[i];
@@ -400,6 +405,7 @@ for(uint32_t i=0; i<lenParams/sizeof(double); ++i)
 
 transform(distanceFunc.begin(),distanceFunc.end(),distanceFunc.begin(),::tolower);
 return new ResultStream(_resultAllocator, dsin, minpts, eps, localnode);
+
 
 ENDEMBED;
 END;
