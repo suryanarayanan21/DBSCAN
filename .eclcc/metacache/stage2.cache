@@ -1,0 +1,6 @@
+<Cache hash="-6408385762853286541">
+<Attr name="stage2">
+ <Depend module="std.system" name="thorlib"/>
+ <Depend module="" name="files"/>
+</Attr>
+</Cache>

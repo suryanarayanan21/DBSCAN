@@ -1,41 +1,16 @@
-00000000 2019-08-13 23:58:36  8836  8836 list disks: Creating PIPE program process : 'lsblk -o TYPE,MAJ:MIN --pairs' - hasinput=0, hasoutput=1 stderrbufsize=8192
-00000001 2019-08-13 23:58:36  8836  8836 list disks: Pipe: process 8838 complete 0
-00000002 2019-08-13 23:58:36  8836  8836 Loading plugin /opt/HPCCSystems/plugins/libtimelib.so[lib_timelib] version = TIMELIB 1.0.0
-00000003 2019-08-13 23:58:36  8836  8836 Loading plugin /opt/HPCCSystems/plugins/libfileservices.so[lib_fileservices] version = FILESERVICES 2.1.4
-00000004 2019-08-13 23:58:36  8836  8836 Plugin /opt/HPCCSystems/plugins/libh3.so exports getECLPluginDefinition but does not export ECL - not loading
-00000005 2019-08-13 23:58:36  8836  8836 Loading plugin /opt/HPCCSystems/plugins/libauditlib.so[lib_auditlib] version = AUDITLIB 1.0.1
-00000006 2019-08-13 23:58:36  8836  8836 Loading plugin /opt/HPCCSystems/plugins/libdebugservices.so[lib_debugservices] version = DEBUGSERVICES 1.0.1
-00000007 2019-08-13 23:58:36  8836  8836 Loading plugin /opt/HPCCSystems/plugins/libstringlib.so[lib_stringlib] version = STRINGLIB 1.1.14
-00000008 2019-08-13 23:58:36  8836  8836 Loading plugin /opt/HPCCSystems/plugins/liblogging.so[lib_logging] version = LOGGING 1.0.1
-00000009 2019-08-13 23:58:36  8836  8836 Loading plugin /opt/HPCCSystems/plugins/libunicodelib.so[lib_unicodelib] version = UNICODELIB 1.1.06
-0000000A 2019-08-13 23:58:36  8836  8836 Loading plugin /opt/HPCCSystems/plugins/libparselib.so[lib_parselib] version = PARSELIB 1.0.1
-0000000B 2019-08-13 23:58:36  8836  8836 Loading plugin /opt/HPCCSystems/plugins/libworkunitservices.so[lib_WORKUNITSERVICES] version = WORKUNITSERVICES 1.0.2
-0000000C 2019-08-13 23:58:36  8836  8836 Plugin /opt/HPCCSystems/plugins/libcassandraembed.so exports getECLPluginDefinition but does not export ECL - not loading
-0000000D 2019-08-13 23:58:36  8836  8836 Plugin /opt/HPCCSystems/plugins/libdmetaphone.so exports getECLPluginDefinition but does not export ECL - not loading
-0000000E 2019-08-13 23:58:36  8836  8836 Plugin /opt/HPCCSystems/versioned/python2/libpy2embed.so exports getECLPluginDefinition but does not export ECL - not loading
-0000000F 2019-08-13 23:58:36  8836  8836 Plugin /opt/HPCCSystems/versioned/python2/libpyembed.so exports getECLPluginDefinition but does not export ECL - not loading
-00000010 2019-08-13 23:58:36  8836  8836 gpg: Creating PIPE program process : 'gpg --verify -' - hasinput=1, hasoutput=0 stderrbufsize=0
-00000011 2019-08-13 23:58:36  8836  8836 gpg: Pipe: process 8842 complete 2
-00000012 2019-08-13 23:58:36  8836  8836 GPG 2 gpg: Signature made Thursday 20 June 2019 05:30:33 PM IST
-gpg:                using RSA key AE43218A4A0A6C3B8461EECF6DFB07708DAA417D
-gpg: Can't check signature: No public key
-
-00000013 2019-08-13 23:58:37  8836  8836 ImplicitProject: Fields [number] for ROLLUP not required by outputs - so blank in transform
-00000014 2019-08-13 23:58:37  8836  8836 ImplicitProject: Minimize recsnf NORMALIZE now (3/4) removed [wi]
-00000015 2019-08-13 23:58:37  8836  8836 ImplicitProject: Minimize x0 PROJECT now (5/6) removed [value]
-00000016 2019-08-13 23:58:37  8836  8836 ImplicitProject: Transform x2 ROLLUP now (5/6) removed [value]
-00000017 2019-08-13 23:58:37  8836  8836 ImplicitProject: Fields [number] for ROLLUP not required by outputs - so blank in transform
-00000018 2019-08-13 23:58:37  8836  8836 ImplicitProject: Transform x2 ROLLUP now (5/5) removed []
-00000019 2019-08-13 23:58:37  8836  8836 Optimizer: Merge PROJECT and DATASET[testset0]
-0000001A 2019-08-13 23:58:37  8836  8836 ImplicitProject: Fields [number] for ROLLUP not required by outputs - so blank in transform
-0000001B 2019-08-13 23:58:37  8836  8836 ImplicitProject: Transform x2 ROLLUP now (5/5) removed []
-0000001C 2019-08-13 23:58:37  8836  8836 Adding library: eclrtl
-0000001D 2019-08-13 23:58:37  8836  8836 Adding source file: a.out.res.s
-0000001E 2019-08-13 23:58:37  8836  8836 addSourceFile a.out.cpp
-0000001F 2019-08-13 23:58:37  8836  8836 addSourceFile a.out_1.cpp
-00000020 2019-08-13 23:58:37  8836  8836 addSourceFile a.out.res.s
-00000021 2019-08-13 23:58:37  8836  8836 Compiling a.out
-00000022 2019-08-13 23:58:39  8836  8836 Remove temporaries
-00000023 2019-08-13 23:58:39  8836  8836 Remove a.out.res.s*
-00000024 2019-08-13 23:58:39  8836  8836 Compiled a.out
-00000025 2019-08-13 23:58:39  8836  8836 Could not remove file 'a.out.res.s'
+00000000 2019-08-19 20:30:10  5547  5547 list disks: Creating PIPE program process : 'lsblk -o TYPE,MAJ:MIN --pairs' - hasinput=0, hasoutput=1 stderrbufsize=8192
+00000001 2019-08-19 20:30:10  5547  5547 list disks: Pipe: process 5549 complete 0
+00000002 2019-08-19 20:30:10  5547  5547 Loading plugin /opt/HPCCSystems/plugins/libtimelib.so[lib_timelib] version = TIMELIB 1.0.0
+00000003 2019-08-19 20:30:10  5547  5547 Loading plugin /opt/HPCCSystems/plugins/libfileservices.so[lib_fileservices] version = FILESERVICES 2.1.4
+00000004 2019-08-19 20:30:10  5547  5547 Plugin /opt/HPCCSystems/plugins/libh3.so exports getECLPluginDefinition but does not export ECL - not loading
+00000005 2019-08-19 20:30:10  5547  5547 Loading plugin /opt/HPCCSystems/plugins/libauditlib.so[lib_auditlib] version = AUDITLIB 1.0.1
+00000006 2019-08-19 20:30:10  5547  5547 Loading plugin /opt/HPCCSystems/plugins/libdebugservices.so[lib_debugservices] version = DEBUGSERVICES 1.0.1
+00000007 2019-08-19 20:30:10  5547  5547 Loading plugin /opt/HPCCSystems/plugins/libstringlib.so[lib_stringlib] version = STRINGLIB 1.1.14
+00000008 2019-08-19 20:30:10  5547  5547 Loading plugin /opt/HPCCSystems/plugins/liblogging.so[lib_logging] version = LOGGING 1.0.1
+00000009 2019-08-19 20:30:10  5547  5547 Loading plugin /opt/HPCCSystems/plugins/libunicodelib.so[lib_unicodelib] version = UNICODELIB 1.1.06
+0000000A 2019-08-19 20:30:10  5547  5547 Loading plugin /opt/HPCCSystems/plugins/libparselib.so[lib_parselib] version = PARSELIB 1.0.1
+0000000B 2019-08-19 20:30:10  5547  5547 Loading plugin /opt/HPCCSystems/plugins/libworkunitservices.so[lib_WORKUNITSERVICES] version = WORKUNITSERVICES 1.0.2
+0000000C 2019-08-19 20:30:10  5547  5547 Plugin /opt/HPCCSystems/plugins/libcassandraembed.so exports getECLPluginDefinition but does not export ECL - not loading
+0000000D 2019-08-19 20:30:10  5547  5547 Plugin /opt/HPCCSystems/plugins/libdmetaphone.so exports getECLPluginDefinition but does not export ECL - not loading
+0000000E 2019-08-19 20:30:10  5547  5547 Plugin /opt/HPCCSystems/versioned/python2/libpy2embed.so exports getECLPluginDefinition but does not export ECL - not loading
+0000000F 2019-08-19 20:30:10  5547  5547 Plugin /opt/HPCCSystems/versioned/python2/libpyembed.so exports getECLPluginDefinition but does not export ECL - not loading
