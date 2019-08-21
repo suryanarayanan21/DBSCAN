@@ -150,4 +150,10 @@ BOOLEAN   if_local := FALSE;
 BOOLEAN   if_core := FALSE;
 END;
 
+EXPORT l_result := RECORD
+    UNSIGNED4 wi;
+    UNSIGNED4 id;
+    UNSIGNED4 clusterID;
+END;
+
 END;
