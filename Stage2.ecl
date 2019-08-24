@@ -11,18 +11,19 @@ EXPORT STREAMED DATASET(Files.l_stage3) locDBSCAN(STREAMED DATASET(Files.l_stage
                                   ) := EMBED(C++ : activity)
 
 #include<iostream>
+#include<cmath>
 #include<bits/stdc++.h>
 
 using namespace std;
 
-struct dataIn{
+struct node{
     uint16_t wi;
     uint64_t id;
     uint64_t nodeId;
     vector<float> fields;
     bool ifLocal = false;
     bool ifCore = false;
-    dataIn *parent = NULL;
+    node *parent = NULL;
     bool isModified = false;
     bool isVisited = false;
 };
@@ -34,18 +35,99 @@ double euclidian(vector<float> a, vector<float> b){
     }
     return sqrt(sum);
 }
+double haversine(vector<float> a,vector<float> b){
+    int M=a.size();
+    if(M!=2){
+        cout<<"Haversine can be applied only for 2 dimensions"<<endl;
+        exit(-1);
+    }
+    double lat1=a[0];
+    double lat2=b[0];
+    double lon1=a[1];
+    double lon2=b[1];
 
-vector<dataIn*> getNeighbors(vector<dataIn*> ds, dataIn *p, double eps){
-    vector<dataIn*> ret;
+    double sin_0 = sin(0.5 * (lat1 - lat2));
+    double sin_1 = sin(0.5 * (lon1 - lon2));
+    return (sin_0 * sin_0 + cos(lat1) * cos(lat2) * sin_1 * sin_1);
+}
+
+
+double manhattan(vector<float> a,vector<float> b){
+    double ans=0;
+    int M=a.size();
+    
+    for(int i=0;i<M;i++)
+    ans=ans+(abs((a[i])-(b[i])));
+
+    return ans;
+}
+
+double minkowski(vector<float> a,vector<float> b,int p=2)
+{
+        // sum(|x - y|^p)^(1/p)
+
+        int m=a.size();
+        double ans=0;
+        for(int i=0;i<m;i++){
+                ans+=pow(abs(a[i]-b[i]),p);
+        }
+
+        return pow(ans,(double)1/p);
+
+}
+
+double cosine(vector<float> a,vector<float> b){
+double ans=0, a1=0,a2=0;
+
+        int m=a.size();
+        for(int i=0;i<m;i++){
+                ans+=a[i]*b[i];
+                a1=a1+pow(a[i],2);
+                a2=a2+pow(b[i],2);
+        }
+
+        return ans/(sqrt(a1)*sqrt(a2));
+
+}
+
+double chebyshev(vector<float> a,vector<float> b)
+{
+        // max(|x - y|)
+
+        int m=a.size();
+        float ans=0;
+        for(int i=0;i<m;i++){
+                ans=max(abs(a[i]-b[i]),ans);
+        }
+
+        return ans;
+
+}
+
+
+vector<node*> getNeighbors(vector<node*> ds, node *p, double eps, string metric="euclidian", int pval=2){
+    vector<node*> ret;
+    double dist=0.0;
     for(uint64_t i=0; i<ds.size(); ++i){
         if(p->wi != ds[i]->wi) continue;
-        double dist = euclidian(p->fields, ds[i]->fields);
+
+        if(metric.compare("cosine")==0)
+        dist = cosine(p->fields, ds[i]->fields);
+        else if(metric.compare("minkowski")==0)
+        dist = minkowski(p->fields, ds[i]->fields,pval);
+        else if(metric.compare("manhattan")==0)
+        dist = manhattan(p->fields, ds[i]->fields);
+        else if(metric.compare("haversine")==0)
+        dist = haversine(p->fields, ds[i]->fields);
+        else
+        dist = euclidian(p->fields, ds[i]->fields);
+
         if(dist <= eps) ret.push_back(ds[i]);
     }
     return ret;
 }
 
-dataIn* find(dataIn *p){
+node* find(node *p){
     if(p->parent == NULL || p->parent == p){
         return p;
     } else {
@@ -53,9 +135,9 @@ dataIn* find(dataIn *p){
     }
 }
 
-void Union(vector<dataIn*> ds, dataIn* a, dataIn* b){
-    dataIn* x = find(a);
-    dataIn* y = find(b);
+void Union(vector<node*> ds, node* a, node* b){
+    node* x = find(a);
+    node* y = find(b);
     if(x->ifCore && !y->ifCore){
         y->parent = x;
         return;
@@ -68,13 +150,13 @@ void Union(vector<dataIn*> ds, dataIn* a, dataIn* b){
     else x->parent = y;
 }
 
-void dbscan(vector<dataIn*> ds, double eps, uint64_t minpts) {
+void dbscan(vector<node*> ds, double eps, uint64_t minpts) {
     for(uint64_t i=0; i<ds.size(); ++i){
 
         if(!ds[i]->ifLocal) continue;
 
         ds[i]->isModified = true;
-        vector<dataIn*> neighs = getNeighbors(ds,ds[i],eps);
+        vector<node*> neighs = getNeighbors(ds,ds[i],eps);
 
         if(neighs.size() >= minpts){
             ds[i]->ifCore = true;
@@ -123,7 +205,7 @@ public:
         byte* p;
         count = 0;
         while((p=(byte*)ds->nextRow())){
-            dataIn temp;
+            node temp;
             temp.wi = *((uint16_t*)p); p += sizeof(uint16_t);
             temp.id = *((unsigned long long*)p); p += 2*sizeof(unsigned long long);
             temp.nodeId = *((unsigned long long*)p); p += sizeof(unsigned long long);
@@ -177,8 +259,8 @@ public:
 protected:
     Linked<IEngineRowAllocator> ra;
     unsigned count;
-    vector<dataIn> dataset;
-    vector<dataIn*> results;
+    vector<node> dataset;
+    vector<node*> results;
     IRowStream *ds;
     uint64_t Lnode;
 };
