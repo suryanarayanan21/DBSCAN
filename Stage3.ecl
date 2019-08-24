@@ -39,20 +39,7 @@ X := DISTRIBUTE(X3,ALL);
 //New layout for stage 3
 l_stage3 := Files.l_stage3;
 
-raw := stage2.locDBSCAN(X,1,5);
-
-OUTPUT(raw,NAMED('raw'));
-
-intermediate := SORT(raw,wi,nodeId,parentId,LOCAL);
-
-mapping := TABLE(intermediate(if_core=TRUE),{wi,nodeId,parentId,maxCore:=MAX(GROUP,id)},wi,nodeId,parentId,LOCAL);
-
-rDS := PROJECT(intermediate, 
-                  TRANSFORM(RECORDOF(intermediate),
-                            SELF.parentID := IF(EXISTS(mapping(wi=LEFT.wi and nodeID=LEFT.nodeID and parentID=LEFT.parentID)),
-                                                mapping(wi=LEFT.wi and nodeID=LEFT.nodeID and parentID=LEFT.parentID)[1].maxCore,
-                                                LEFT.id),
-                            SELF := LEFT),LOCAL);
+rDS := stage2.locDBSCAN(X,1,5);
 
 OUTPUT(rDS, NAMED('rDS'));
 
