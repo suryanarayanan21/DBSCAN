@@ -11,10 +11,12 @@ EXPORT STREAMED DATASET(Files.l_stage3) locDBSCAN(STREAMED DATASET(Files.l_stage
                                   ) := EMBED(C++ : activity)
 
 #include<iostream>
-#include<cmath>
 #include<bits/stdc++.h>
 
 using namespace std;
+
+string distanceFunc = "euclidian";
+vector<double> dist_params;
 
 struct node{
     uint16_t wi;
@@ -35,12 +37,14 @@ double euclidian(vector<float> a, vector<float> b){
     }
     return sqrt(sum);
 }
-double haversine(vector<float> a,vector<float> b){
+
+double haversine(vector<float> a, vector<float> b){
     int M=a.size();
+    
     if(M!=2){
-        cout<<"Haversine can be applied only for 2 dimensions"<<endl;
-        exit(-1);
+        return 0;
     }
+
     double lat1=a[0];
     double lat2=b[0];
     double lon1=a[1];
@@ -48,11 +52,12 @@ double haversine(vector<float> a,vector<float> b){
 
     double sin_0 = sin(0.5 * (lat1 - lat2));
     double sin_1 = sin(0.5 * (lon1 - lon2));
+
     return (sin_0 * sin_0 + cos(lat1) * cos(lat2) * sin_1 * sin_1);
 }
 
 
-double manhattan(vector<float> a,vector<float> b){
+double manhattan(vector<float> a, vector<float> b){
     double ans=0;
     int M=a.size();
     
@@ -62,65 +67,57 @@ double manhattan(vector<float> a,vector<float> b){
     return ans;
 }
 
-double minkowski(vector<float> a,vector<float> b,int p=2)
-{
-        // sum(|x - y|^p)^(1/p)
+double minkowski(vector<float> a, vector<float> b, int p){
+    // sum(|x - y|^p)^(1/p)
 
-        int m=a.size();
-        double ans=0;
-        for(int i=0;i<m;i++){
-                ans+=pow(abs(a[i]-b[i]),p);
-        }
+    int m=a.size();
+    double ans=0;
+    for(int i=0;i<m;i++){
+            ans+=pow(abs(a[i]-b[i]),p);
+    }
 
-        return pow(ans,(double)1/p);
-
+    return pow(ans,(double)1/p);
 }
 
-double cosine(vector<float> a,vector<float> b){
-double ans=0, a1=0,a2=0;
-
-        int m=a.size();
-        for(int i=0;i<m;i++){
-                ans+=a[i]*b[i];
-                a1=a1+pow(a[i],2);
-                a2=a2+pow(b[i],2);
-        }
-
-        return ans/(sqrt(a1)*sqrt(a2));
-
+double cosine(vector<float> a, vector<float> b){
+    double ans=0, a1=0,a2=0;
+    int m=a.size();
+    for(int i=0;i<m;i++){
+            ans+=a[i]*b[i];
+            a1=a1+pow(a[i],2);
+            a2=a2+pow(b[i],2);
+    }
+    return ans/(sqrt(a1)*sqrt(a2));
 }
 
-double chebyshev(vector<float> a,vector<float> b)
-{
-        // max(|x - y|)
-
-        int m=a.size();
-        float ans=0;
-        for(int i=0;i<m;i++){
-                ans=max(abs(a[i]-b[i]),ans);
-        }
-
-        return ans;
-
+double chebyshev(vector<float> a, vector<float> b){
+    // max(|x - y|)
+    int m=a.size();
+    float ans=0;
+    for(int i=0;i<m;i++){
+            ans=max(abs(a[i]-b[i]),ans);
+    }
+    return ans;
 }
 
-
-vector<node*> getNeighbors(vector<node*> ds, node *p, double eps, string metric="euclidian", int pval=2){
+vector<node*> getNeighbors(vector<node*> ds, node *p, double eps){
     vector<node*> ret;
-    double dist=0.0;
     for(uint64_t i=0; i<ds.size(); ++i){
+
         if(p->wi != ds[i]->wi) continue;
 
-        if(metric.compare("cosine")==0)
-        dist = cosine(p->fields, ds[i]->fields);
-        else if(metric.compare("minkowski")==0)
-        dist = minkowski(p->fields, ds[i]->fields,pval);
-        else if(metric.compare("manhattan")==0)
-        dist = manhattan(p->fields, ds[i]->fields);
-        else if(metric.compare("haversine")==0)
-        dist = haversine(p->fields, ds[i]->fields);
+        double dist;
+
+        if(distanceFunc.compare("cosine")==0)
+            dist = cosine(p->fields, ds[i]->fields);
+        else if(distanceFunc.compare("minkowski")==0)
+            dist = minkowski(p->fields, ds[i]->fields, dist_params[0]);
+        else if(distanceFunc.compare("manhattan")==0)
+            dist = manhattan(p->fields, ds[i]->fields);
+        else if(distanceFunc.compare("haversine")==0)
+            dist = haversine(p->fields, ds[i]->fields);
         else
-        dist = euclidian(p->fields, ds[i]->fields);
+            dist = euclidian(p->fields, ds[i]->fields);
 
         if(dist <= eps) ret.push_back(ds[i]);
     }
@@ -267,14 +264,15 @@ protected:
 
 #body
 
-//distanceFunc = distance_func;
-//double* p = (double*)params;
-/*
-for(uint32_t i=0; i<lenParams/sizeof(double); ++i)
+distanceFunc = distance_func;
+double* p = (double*)params;
+
+for(uint32_t i=0; i<lenParams/sizeof(double); ++i){
   dist_params.push_back(*p);
   p += sizeof(double);
-*/
-//transform(distanceFunc.begin(),distanceFunc.end(),distanceFunc.begin(),::tolower);
+}
+
+transform(distanceFunc.begin(),distanceFunc.end(),distanceFunc.begin(),::tolower);
 
 return new ResultStream(_resultAllocator, dsin, minpts, eps, localnode);
 
