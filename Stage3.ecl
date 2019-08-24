@@ -4,13 +4,12 @@ IMPORT STD.system.Thorlib;
 IMPORT Files;
 IMPORT Stage2;
 
-ds := Files.trainRecs;
+ds := Files.testset0;
 //Add ID field and transform
 //the raw data to NumericField type
 ML_Core.AppendSeqID(ds, id, recs);
 ML_Core.ToField(recs, recsNF);
 OUTPUT(recsNF, NAMED('recsNF'));
-
 //Evenly distribute the data
 Xnf1 := DISTRIBUTE(recsNF, id);
 //Transform to 1_stage1
@@ -34,30 +33,27 @@ X3 := PROJECT(X2, TRANSFORM(
                             SELF := LEFT),
                             LOCAL);
 //Braodcast for local clustering.
-X := DISTRIBUTE(X3, ALL);
+X := DISTRIBUTE(X3,ALL);
 
 //Sample code for stage 3 Global Merge
 //New layout for stage 3
 l_stage3 := Files.l_stage3;
 
-raw := stage2.locDBSCAN(X,0.5,5);
+raw := stage2.locDBSCAN(X,1,5);
+
+OUTPUT(raw,NAMED('raw'));
 
 intermediate := SORT(raw,wi,nodeId,parentId,LOCAL);
 
 mapping := TABLE(intermediate(if_core=TRUE),{wi,nodeId,parentId,maxCore:=MAX(GROUP,id)},wi,nodeId,parentId,LOCAL);
 
-f := PROJECT(intermediate, 
+rDS := PROJECT(intermediate, 
                   TRANSFORM(RECORDOF(intermediate),
                             SELF.parentID := IF(EXISTS(mapping(wi=LEFT.wi and nodeID=LEFT.nodeID and parentID=LEFT.parentID)),
                                                 mapping(wi=LEFT.wi and nodeID=LEFT.nodeID and parentID=LEFT.parentID)[1].maxCore,
                                                 LEFT.id),
-                            SELF := LEFT));
+                            SELF := LEFT),LOCAL);
 
-w1 := PROJECT(f, TRANSFORM(l_stage3, SELF.wi := 1, SELF := LEFT));
-OUTPUT(w1, NAMED('w1'));
-w2 := PROJECT(f, TRANSFORM(l_stage3, SELF.wi := 2, SELF := LEFT));
-OUTPUT(w2, NAMED('w2'));
-rDS := w1 + w2;
 OUTPUT(rDS, NAMED('rDS'));
 
 //Layout for Ultimate() and Loop_Func()
@@ -292,7 +288,6 @@ initial := JOIN(initial0, localCores,
                         SELF := LEFT), LOCAL);
 OUTPUT(initial, NAMED('initial'));
 
-
 //LOOP to get the final result/ultimateID
 Loop_Func(DATASET(Layout) ds) := FUNCTION
     tempLayout := RECORD
@@ -332,35 +327,3 @@ OUTPUT(SORT(result, wi, id), NAMED('result'));
 //Final result with simpiflied format: id and cluster id only
 final := PROJECT(result , TRANSFORM({UNSIGNED4 wi, UNSIGNED4 id, UNSIGNED4 clusterID}, SELF.clusterID := LEFT.ultimateID, SELF := LEFT));
 OUTPUT(SORT(final, wi, id), NAMED('final'));
-
-//evaluate the result: if the result shows 0 rows, it proves the result is correct.
-l_result := RECORD
-  UNSIGNED4 id;
-  UNSIGNED4 clusterID;
-END;
-
-answers := DATASET([
-  {1,1},
-  {2,5},
-  {3,1},
-  {4,12},
-  {5,5},
-  {6,10},
-  {7,12},
-  {8,10},
-  {9,9},
-  {10,10},
-  {11,9},
-  {12,12},
-  {13,13},
-  {14,9},
-  {15,12},
-  {16,12},
-  {17,9},
-  {18,5},
-  {19,5},
-  {20,10}
-], l_result);
-
-evl := JOIN(final, answers, LEFT.id = RIGHT.id AND LEFT.clusterID <> RIGHT.clusterID);
-OUTPUT(evl, NAMED('evaluation'));
