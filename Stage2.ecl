@@ -56,6 +56,13 @@ dataIn* find(dataIn *p){
 void Union(vector<dataIn*> ds, dataIn* a, dataIn* b){
     dataIn* x = find(a);
     dataIn* y = find(b);
+    if(x->ifCore && !y->ifCore){
+        y->parent = x;
+        return;
+    } else if (!x->ifCore && y->ifCore){
+        x->parent = y;
+        return;
+    }
     if(x == y) return;
     else if(x->id > y->id) y->parent = x;
     else x->parent = y;
@@ -71,6 +78,7 @@ void dbscan(vector<dataIn*> ds, double eps, uint64_t minpts) {
 
         if(neighs.size() >= minpts){
             ds[i]->ifCore = true;
+            ds[i]->parent = NULL;
             for(uint64_t n=0; n < neighs.size(); ++n){
                 neighs[n]->isModified = true;
                 if(neighs[n]->ifLocal){
