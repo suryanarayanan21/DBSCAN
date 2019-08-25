@@ -1,22 +1,24 @@
-00000000 2019-08-24 23:29:41  9536  9536 list disks: Creating PIPE program process : 'lsblk -o TYPE,MAJ:MIN --pairs' - hasinput=0, hasoutput=1 stderrbufsize=8192
-00000001 2019-08-24 23:29:41  9536  9536 list disks: Pipe: process 9538 complete 0
-00000002 2019-08-24 23:29:41  9536  9536 Loading plugin /opt/HPCCSystems/plugins/libtimelib.so[lib_timelib] version = TIMELIB 1.0.0
-00000003 2019-08-24 23:29:41  9536  9540 UDP Initial InError total: 2778
-00000004 2019-08-24 23:29:41  9536  9536 Loading plugin /opt/HPCCSystems/plugins/libfileservices.so[lib_fileservices] version = FILESERVICES 2.1.4
-00000005 2019-08-24 23:29:41  9536  9536 Plugin /opt/HPCCSystems/plugins/libh3.so exports getECLPluginDefinition but does not export ECL - not loading
-00000006 2019-08-24 23:29:41  9536  9536 Loading plugin /opt/HPCCSystems/plugins/libauditlib.so[lib_auditlib] version = AUDITLIB 1.0.1
-00000007 2019-08-24 23:29:41  9536  9536 Loading plugin /opt/HPCCSystems/plugins/libdebugservices.so[lib_debugservices] version = DEBUGSERVICES 1.0.1
-00000008 2019-08-24 23:29:41  9536  9536 Loading plugin /opt/HPCCSystems/plugins/libstringlib.so[lib_stringlib] version = STRINGLIB 1.1.14
-00000009 2019-08-24 23:29:41  9536  9536 Loading plugin /opt/HPCCSystems/plugins/liblogging.so[lib_logging] version = LOGGING 1.0.1
-0000000A 2019-08-24 23:29:41  9536  9536 Loading plugin /opt/HPCCSystems/plugins/libunicodelib.so[lib_unicodelib] version = UNICODELIB 1.1.06
-0000000B 2019-08-24 23:29:41  9536  9536 Loading plugin /opt/HPCCSystems/plugins/libparselib.so[lib_parselib] version = PARSELIB 1.0.1
-0000000C 2019-08-24 23:29:41  9536  9536 Loading plugin /opt/HPCCSystems/plugins/libworkunitservices.so[lib_WORKUNITSERVICES] version = WORKUNITSERVICES 1.0.2
-0000000D 2019-08-24 23:29:41  9536  9536 Plugin /opt/HPCCSystems/plugins/libcassandraembed.so exports getECLPluginDefinition but does not export ECL - not loading
-0000000E 2019-08-24 23:29:41  9536  9536 Plugin /opt/HPCCSystems/plugins/libdmetaphone.so exports getECLPluginDefinition but does not export ECL - not loading
-0000000F 2019-08-24 23:29:41  9536  9536 getECLPluginDefinition not found in /opt/HPCCSystems/plugins/libopencv.so, unloading
-00000010 2019-08-24 23:29:41  9536  9536 Plugin /opt/HPCCSystems/versioned/python2/libpy2embed.so exports getECLPluginDefinition but does not export ECL - not loading
-00000011 2019-08-24 23:29:41  9536  9536 Plugin /opt/HPCCSystems/versioned/python2/libpyembed.so exports getECLPluginDefinition but does not export ECL - not loading
-00000012 2019-08-24 23:29:41  9536  9536 Duplicate module found at /home/yatish/Desktop/HPCC_DBSCAN/DBSCAN/./Stage3.ecl
-00000013 2019-08-24 23:29:41  9536  9536 Duplicate module found at /home/yatish/Desktop/HPCC_DBSCAN/DBSCAN/./Files.ecl
-00000014 2019-08-24 23:29:41  9536  9536 Duplicate module found at /home/yatish/Desktop/HPCC_DBSCAN/DBSCAN/./Stage2.ecl
-00000015 2019-08-24 23:29:41  9536  9536 Cannot create archive from cache for Stage3 because it is not up to date
+00000000 2019-08-25 13:05:35  6422  6422 list disks: Creating PIPE program process : 'lsblk -o TYPE,MAJ:MIN --pairs' - hasinput=0, hasoutput=1 stderrbufsize=8192
+00000001 2019-08-25 13:05:35  6422  6422 list disks: Pipe: process 6424 complete 0
+00000002 2019-08-25 13:05:35  6422  6422 Loading plugin /opt/HPCCSystems/plugins/libtimelib.so[lib_timelib] version = TIMELIB 1.0.0
+00000003 2019-08-25 13:05:35  6422  6422 Loading plugin /opt/HPCCSystems/plugins/libfileservices.so[lib_fileservices] version = FILESERVICES 2.1.4
+00000004 2019-08-25 13:05:35  6422  6422 Plugin /opt/HPCCSystems/plugins/libh3.so exports getECLPluginDefinition but does not export ECL - not loading
+00000005 2019-08-25 13:05:35  6422  6422 Loading plugin /opt/HPCCSystems/plugins/libauditlib.so[lib_auditlib] version = AUDITLIB 1.0.1
+00000006 2019-08-25 13:05:35  6422  6422 Loading plugin /opt/HPCCSystems/plugins/libdebugservices.so[lib_debugservices] version = DEBUGSERVICES 1.0.1
+00000007 2019-08-25 13:05:35  6422  6422 Loading plugin /opt/HPCCSystems/plugins/libstringlib.so[lib_stringlib] version = STRINGLIB 1.1.14
+00000008 2019-08-25 13:05:35  6422  6422 Loading plugin /opt/HPCCSystems/plugins/liblogging.so[lib_logging] version = LOGGING 1.0.1
+00000009 2019-08-25 13:05:35  6422  6422 Loading plugin /opt/HPCCSystems/plugins/libunicodelib.so[lib_unicodelib] version = UNICODELIB 1.1.06
+0000000A 2019-08-25 13:05:35  6422  6422 Loading plugin /opt/HPCCSystems/plugins/libparselib.so[lib_parselib] version = PARSELIB 1.0.1
+0000000B 2019-08-25 13:05:35  6422  6422 Loading plugin /opt/HPCCSystems/plugins/libworkunitservices.so[lib_WORKUNITSERVICES] version = WORKUNITSERVICES 1.0.2
+0000000C 2019-08-25 13:05:35  6422  6422 Plugin /opt/HPCCSystems/plugins/libcassandraembed.so exports getECLPluginDefinition but does not export ECL - not loading
+0000000D 2019-08-25 13:05:35  6422  6422 Plugin /opt/HPCCSystems/plugins/libdmetaphone.so exports getECLPluginDefinition but does not export ECL - not loading
+0000000E 2019-08-25 13:05:36  6422  6422 getECLPluginDefinition not found in /opt/HPCCSystems/plugins/libopencv.so, unloading
+0000000F 2019-08-25 13:05:36  6422  6422 Plugin /opt/HPCCSystems/versioned/python2/libpy2embed.so exports getECLPluginDefinition but does not export ECL - not loading
+00000010 2019-08-25 13:05:36  6422  6422 Plugin /opt/HPCCSystems/versioned/python2/libpyembed.so exports getECLPluginDefinition but does not export ECL - not loading
+00000011 2019-08-25 13:05:36  6422  6422 Duplicate module found at /home/yatish/Desktop/HPCC_DBSCAN/DBSCAN/./Stage3.ecl
+00000012 2019-08-25 13:05:36  6422  6422 Duplicate module found at /home/yatish/Desktop/HPCC_DBSCAN/DBSCAN/./DBSCAN.ecl
+00000013 2019-08-25 13:05:36  6422  6422 Duplicate module found at /home/yatish/Desktop/HPCC_DBSCAN/DBSCAN/./Files.ecl
+00000014 2019-08-25 13:05:36  6422  6422 Duplicate module found at /home/yatish/Desktop/HPCC_DBSCAN/DBSCAN/./tests
+00000015 2019-08-25 13:05:36  6422  6422 Duplicate module found at /home/yatish/Desktop/HPCC_DBSCAN/DBSCAN/./Stage2.ecl
+00000016 2019-08-25 13:05:36  6422  6422 Duplicate module found at /home/yatish/Desktop/HPCC_DBSCAN/DBSCAN/./test.ecl
+00000017 2019-08-25 13:05:36  6422  6422 Cannot create archive from cache for tests.validation.test because it is not up to date

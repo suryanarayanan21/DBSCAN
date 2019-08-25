@@ -2,18 +2,25 @@ import pdb
 import pandas as pd
 from sklearn.cluster import DBSCAN
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 #test dataset
-test_dataset='test_1.csv'
+test_dataset='../../datasets/Frogs.csv'
 #hpcc output csv
-hpcc_in = 'test_1_debug.csv'
-#columns in main dataset
+hpcc_in = '../hpcc/frogs_hpcc.csv'
+#columns/fields in main dataset
+#testset0
 #columns=['A','B','C']
+#frogs
+columns=['MFCCs_ 1', 'MFCCs_ 2', 'MFCCs_ 3', 'MFCCs_ 4', 'MFCCs_ 5', 'MFCCs_ 6','MFCCs_ 7', 'MFCCs_ 8', 'MFCCs_ 9', 'MFCCs_10', 'MFCCs_11', 'MFCCs_12','MFCCs_13', 'MFCCs_14', 'MFCCs_15', 'MFCCs_16', 'MFCCs_17', 'MFCCs_18','MFCCs_19', 'MFCCs_20', 'MFCCs_21', 'MFCCs_22']
 
 
 
-columns=['0','1']
+# columns=['0','1']
+
+# eps=0.5
+# min_samples=6
 
 eps=0.3
 min_samples=10
@@ -24,36 +31,45 @@ X=np.array(test_set[columns])
 
 db = DBSCAN(eps=eps, min_samples=min_samples).fit(X)
 test_set['labels']=db.labels_
-
 ref=test_set
 out=pd.read_csv(hpcc_in)
 out=out.sort_values('id').reset_index()
-pdb.set_trace()
 outliers=0
 v={}
+noc=0
+noo=0
+acc=0
 for i in range(len(out)):
-    if out.iloc[i]['id']==out.iloc[i]['parentid'] and out.iloc[i]['parentid'] not in v :
+    if out.iloc[i]['id']==out.iloc[i]['clusterid'] and out.iloc[i]['clusterid'] not in v :
         outliers+=1
+        noo=1
     else:
-        p=out.iloc[i]['parentid']
+        p=out.iloc[i]['clusterid']
         if p in v:
             continue
         v[p]=1
+        noc+=1
         t=ref.iloc[i]['labels']
-        cnt_df=out[out['parentid']==p]
+        cnt_df=out[out['clusterid']==p]
         actualdf=ref[ref['labels']==t]
-        print('For parent',p,'id in actual',t,'accuracy (hpcc/python)  of ',len(cnt_df)/len(actualdf))
+        print('For parent',p,'id in actual',t,'accuracy (hpcc/python)  of ',(len(cnt_df)/len(actualdf))*100,' %')
+        acc=acc+len(cnt_df)/len(actualdf)
+acc=acc+outliers/len(test_set[test_set['labels']==-1])
 print('Outliers accuracy (hpcc/python)',outliers/len(test_set[test_set['labels']==-1]))
-
-import matplotlib.pyplot as plt
+print('Number of clusters in hpcc - ',noo+noc,'VS Number of clusters in sklearn - ',len(set(db.labels_)))
+print('Average accuracy - ',acc/(noo+noc))
+########################## PLOTTING CODE BELOW ####################################
 
 for i in range(len(out)):
-    if out.iloc[i]['id']==out.iloc[i]['parentid'] and out.iloc[i]['parentid'] not in v :
-        out.at[i,'parentid']=-1
+    if out.iloc[i]['id']==out.iloc[i]['clusterid'] and out.iloc[i]['clusterid'] not in v :
+        out.at[i,'clusterid']=-1
 
 for i in columns:
     out[i]=ref[i]
-pdb.set_trace()
+
+
+#label col is the column name having cluster id's
+#Utilty function to plot 2-D scatter plot
 def plot(df,label_col):
     labels=np.array(df[label_col])
     core_samples_mask = np.zeros_like(labels, dtype=bool)
@@ -77,6 +93,6 @@ def plot(df,label_col):
     plt.show()
     
 
-plot(out,'parentid')
-plot(ref,'labels')
+# plot(out,'clusterid')
+# plot(ref,'labels')
 
