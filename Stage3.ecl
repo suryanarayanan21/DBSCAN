@@ -44,6 +44,7 @@ raw := Stage2.locDBSCAN(X,1,5);
 output(raw,named('raw'));
 intermediate := SORT(raw,wi,nodeId,parentId,LOCAL);
 
+
 mapping := TABLE(intermediate(if_core=TRUE),{wi,nodeId,parentId,maxCore:=MAX(GROUP,id)},wi,nodeId,parentId,LOCAL);
 
 f := PROJECT(intermediate, 
