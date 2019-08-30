@@ -587,4 +587,16 @@ EXPORT DBSCAN(REAL8 eps = 0, UNSIGNED4 minPts = 2, STRING8 dist = 'Euclidian', S
     RETURN result1;
   END;//end fit()
 
+  EXPORT DATASET(Files.l_num_clusters) Num_Clusters(DATASET(Types.NumericField) ds) := FUNCTION
+    //Find clustering of ds
+    clustering := Fit(ds);
+    //Find maxmimum label of X samples per work item
+    result0 := TABLE(clustering,{wi,num:=MAX(GROUP,label)},wi);
+    //Project to match return type
+    result1 := PROJECT(result0, TRANSFORM(Files.l_num_clusters,
+                                          SELF.wi := LEFT.wi,
+                                          SELF.num := LEFT.num));
+    RETURN result1;
+  END;//end Num_Clusters()
+
 END;//end DBSCAN
