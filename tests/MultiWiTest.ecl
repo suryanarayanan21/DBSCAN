@@ -1,11 +1,11 @@
 IMPORT ML_Core;
 IMPORT $.^ AS DBSCAN;
-IMPORT frog_data;
+IMPORT $.datasets.frog_dataset AS frog_data;
 
 // Test to confirm that multiple work items are evaluated separately and
 // independently
 
-ds := frog_data.numeric_dataset;
+ds := frog_data.ds;
 
 ML_Core.AppendSeqID(ds,id,dsID);
 ML_Core.ToField(dsID,dsNF);
@@ -22,10 +22,10 @@ OUTPUT(clustering,NAMED('Final'));
 // eval must have zero records
 
 eval := JOIN(clustering(wi=1),clustering(wi=2),
-             LEFT.id=RIGHT.id and LEFT.clusterId <> RIGHT.clusterId,
+             LEFT.id=RIGHT.id and LEFT.label <> RIGHT.label,
              TRANSFORM(RECORDOF(clustering),
                        SELF.wi := LEFT.wi,
                        SELF.id := LEFT.id,
-                       SELF.clusterId := LEFT.clusterID));
+                       SELF.label := LEFT.label));
 
 OUTPUT(eval,NAMED('eval'));
