@@ -471,7 +471,7 @@ EXPORT DBSCAN(REAL8 eps = 0, UNSIGNED4 minPts = 2, STRING8 dist = 'Euclidian', S
   /**
     * fit() function i
     */
-  EXPORT DATASET(Files.l_result) fit(DATASET(Types.NumericField) ds) := FUNCTION
+  EXPORT DATASET(ML_Core.Types.ClusterLabels) fit(DATASET(Types.NumericField) ds) := FUNCTION
 
     /**
       * Stage 1: Transform and distribute input dataset ds for local clustering in stage 2.
@@ -564,11 +564,27 @@ EXPORT DBSCAN(REAL8 eps = 0, UNSIGNED4 minPts = 2, STRING8 dist = 'Euclidian', S
                                                                     SELF.ultimateID := IF(right.id =0, LEFT.parentid, RIGHT.ultimateID),
                                                                     SELF:= LEFT),
                                                                     LEFT OUTER);
-    //combine outlier to get the final complete result
-    result0 := outliers + update_non_outliers;
-    //Final result with simpiflied format: id and cluster id only
-    result := PROJECT(result0 , TRANSFORM(Files.l_result, SELF.clusterID := LEFT.ultimateID, SELF := LEFT));
-    RETURN result;
+    //Convert ultimate id of outliers to zero
+    outliers1 := PROJECT(outliers, TRANSFORM(ML_Core.Types.ClusterLabels,
+                                             SELF.label := 0,
+                                             SELF.id := LEFT.id,
+                                             SELF.wi := LEFT.wi));
+    //Get mapping to 1-based cluster labels
+    map0 := TABLE(update_non_outliers,{wi,ultimateId,id_min:=MIN(GROUP,id)},wi,ultimateId);
+    map1 := PROJECT(SORT(map0,wi,id_min), TRANSFORM(RECORDOF(map0),
+                                    SELF.wi:=LEFT.wi,
+                                    SELF.ultimateId:=LEFT.ultimateID,
+                                    SELF.id_min:=COUNTER));
+    //Map 1 based indices to the cluster labels
+    result0 := PROJECT(update_non_outliers, TRANSFORM(ML_Core.Types.ClusterLabels,
+                                                      SELF.label := map1(wi=LEFT.wi and ultimateid=LEFT.ultimateId)[1].id_min
+                                                                    - MIN(map1(wi=LEFT.wi),map1(wi=LEFT.wi).id_min)
+                                                                    + 1,
+                                                      SELF.wi := LEFT.wi,
+                                                      SELF.id := LEFT.id));
+    //Combine outliers and non outliers to form final result
+    result1 := result0 + outliers1;
+    RETURN result1;
   END;//end fit()
 
 END;//end DBSCAN
