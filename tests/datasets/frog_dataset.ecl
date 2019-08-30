@@ -1,3 +1,14 @@
+/*
+ * This dataset is an ECL extract of the Anuran call dataset from the
+ * UCI Machine Learning Repository.
+ *
+ * (Found here: https://archive.ics.uci.edu/ml/datasets/Anuran+Calls+%28MFCCs%29)
+ *
+ * This file contains the first 999 instances of the total 7195 instances present
+ * in the original dataset. This file also contains the results of DBSCAN
+ * clustering performed using sklearn on the first 999 instances for testing purposes.
+ */
+
 EXPORT Frog_dataset := MODULE
 EXPORT layout := RECORD
     REAL8 MFCC_1;
