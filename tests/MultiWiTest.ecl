@@ -1,14 +1,14 @@
 IMPORT ML_Core;
-IMPORT $ AS DBSCAN;
+IMPORT $.^ AS DBSCAN;
 IMPORT frog_data;
+
+// Test to confirm that multiple work items are evaluated separately and
+// independently
 
 ds := frog_data.numeric_dataset;
 
 ML_Core.AppendSeqID(ds,id,dsID);
 ML_Core.ToField(dsID,dsNF);
-
-// Test to confirm that multiple work items are evaluated separately and
-// independently
 
 wi1 := PROJECT(dsNF, TRANSFORM(ML_Core.Types.NumericField,SELF.wi := 1, SELF := LEFT));
 wi2 := PROJECT(dsNF, TRANSFORM(ML_Core.Types.NumericField,SELF.wi := 2, SELF := LEFT));
