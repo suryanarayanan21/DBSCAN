@@ -1,6 +1,6 @@
 IMPORT ML_Core;
 IMPORT ML_Core.Types AS Types;
-IMPORT Files;
+IMPORT DBSCAN_Types AS Files;
 IMPORT Std.system.Thorlib;
 
 
