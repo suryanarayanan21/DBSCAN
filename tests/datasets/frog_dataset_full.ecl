@@ -1,4 +1,15 @@
-layout := RECORD
+/*
+ * This dataset is an ECL extract of the Anuran call dataset from the
+ * UCI Machine Learning Repository.
+ *
+ * (Found here: https://archive.ics.uci.edu/ml/datasets/Anuran+Calls+%28MFCCs%29)
+ *
+ * This file contains the first 999 instances of the total 7195 instances present
+ * in the original dataset. This file also contains the results of DBSCAN
+ * clustering performed using sklearn on the first 999 instances for testing purposes.
+ */
+EXPORT frog_dataset_full := MODULE
+    EXPORT layout := RECORD
         REAL8 MFCC_1;
         REAL8 MFCC_2;
         REAL8 MFCC_3;
@@ -22,7 +33,6 @@ layout := RECORD
         REAL8 MFCC_21;
         REAL8 MFCC_22;
     END;
-EXPORT frogs:= MODULE 
     EXPORT ds := DATASET([
     {1.0,0.152936298,-0.10558590300000001,0.200721915,0.317201062,0.260763853,0.100944641,-0.150062605,-0.171127632,0.124676436,0.18865414600000002,-0.075621723,-0.156435925,0.082245115,0.135752042,-0.024016645,-0.10835110699999999,-0.077622521,-0.009567802,0.057683975,0.118680135,0.014038446000000001},
     {1.0,0.171534257,-0.098974737,0.268425221,0.33867186299999996,0.2683531,0.060835087,-0.22247464,-0.20769267100000002,0.170882874,0.27095828,-0.095003945,-0.254341468,0.022786235,0.163320101,0.012022281000000001,-0.090974011,-0.056509522,-0.035303357,0.020139963,0.082262987,0.029055742000000002},
