@@ -603,7 +603,7 @@ EXPORT DBSCAN(REAL8 eps = 0, UNSIGNED4 minPts = 2, STRING8 dist = 'Euclidian', S
     //Find clustering of ds
     clustering := Fit(ds);
     //Find outliers
-    outliers := TABLE(clustering,{wi,num:=MAX(GROUP,0)},wi);
+    outliers := TABLE(clustering,{wi,num:=0},wi);
     //Project to match return type
     result1 := PROJECT(outliers, TRANSFORM(Files.l_num_clusters,
                                           SELF.wi := LEFT.wi,

@@ -5,14 +5,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-#test dataset
-test_dataset='../../datasets/Frogs.csv'
-#hpcc output csv
-hpcc_in = '../hpcc/frogs_hpcc.csv'
-#columns/fields in main dataset
-#testset0
-#columns=['A','B','C']
-#frogs
 columns=['MFCCs_ 1', 'MFCCs_ 2', 'MFCCs_ 3', 'MFCCs_ 4', 'MFCCs_ 5', 'MFCCs_ 6','MFCCs_ 7', 'MFCCs_ 8', 'MFCCs_ 9', 'MFCCs_10', 'MFCCs_11', 'MFCCs_12','MFCCs_13', 'MFCCs_14', 'MFCCs_15', 'MFCCs_16', 'MFCCs_17', 'MFCCs_18','MFCCs_19', 'MFCCs_20', 'MFCCs_21', 'MFCCs_22']
 
 
