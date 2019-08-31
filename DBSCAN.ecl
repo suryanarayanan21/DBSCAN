@@ -604,10 +604,12 @@ EXPORT DBSCAN(REAL8 eps = 0, UNSIGNED4 minPts = 2, STRING8 dist = 'Euclidian', S
     clustering := Fit(ds);
     //Find outliers
     outliers := TABLE(clustering,{wi,num:=0},wi);
+    //Find number of outliers
+    outliers1:=clustering(label=0);
     //Project to match return type
     result1 := PROJECT(outliers, TRANSFORM(Files.l_num_clusters,
                                           SELF.wi := LEFT.wi,
-                                          SELF.num := count(outliers)));
+                                          SELF.num := count(outliers1)));
     RETURN result1;
   END;//end Num_Outliers()
 
