@@ -599,4 +599,17 @@ EXPORT DBSCAN(REAL8 eps = 0, UNSIGNED4 minPts = 2, STRING8 dist = 'Euclidian', S
     RETURN result1;
   END;//end Num_Clusters()
 
+  EXPORT DATASET(Files.l_num_clusters) Num_Outliers(DATASET(Types.NumericField) ds) := FUNCTION
+    //Find clustering of ds
+    clustering := Fit(ds);
+    //Find outliers
+    outliers := TABLE(clustering,{wi,num:=MAX(GROUP,0)},wi);
+    //Project to match return type
+    result1 := PROJECT(outliers, TRANSFORM(Files.l_num_clusters,
+                                          SELF.wi := LEFT.wi,
+                                          SELF.num := count(outliers)));
+    RETURN result1;
+  END;//end Num_Outliers()
+
+
 END;//end DBSCAN

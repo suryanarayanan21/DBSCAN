@@ -10,3 +10,4 @@ ML_Core.AppendSeqID(ds,id,dsID);
 ML_Core.ToField(dsID,dsNF);
 
 OUTPUT(DBSCAN.DBSCAN(0.3,10).Num_Clusters(dsNF));
+OUTPUT(DBSCAN.DBSCAN(0.3,10).Num_Outliers(dsNF));

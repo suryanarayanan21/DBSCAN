@@ -39,4 +39,9 @@ EXPORT l_result := RECORD
     UNSIGNED4 clusterID;
 END;
 
+EXPORT l_num_clusters := RECORD
+    UNSIGNED4 wi;
+    UNSIGNED4 num;
+END;
+
 END;
