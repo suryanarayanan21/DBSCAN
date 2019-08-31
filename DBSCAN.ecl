@@ -602,16 +602,13 @@ EXPORT DBSCAN(REAL8 eps = 0, UNSIGNED4 minPts = 2, STRING8 dist = 'Euclidian', S
   EXPORT DATASET(Files.l_num_clusters) Num_Outliers(DATASET(Types.NumericField) ds) := FUNCTION
     //Find clustering of ds
     clustering := Fit(ds);
-    //Find outliers
-    outliers := TABLE(clustering,{wi,num:=0},wi);
-    //Find number of outliers
-    outliers1:=clustering(label=0);
+    //Find number of outliers per work item
+    outliers := TABLE(clustering(label=0),{wi,num:=COUNT(GROUP)},wi);
     //Project to match return type
-    result1 := PROJECT(outliers, TRANSFORM(Files.l_num_clusters,
+    result := PROJECT(outliers, TRANSFORM(Files.l_num_clusters,
                                           SELF.wi := LEFT.wi,
-                                          SELF.num := count(outliers1)));
-    RETURN result1;
+                                          SELF.num := LEFT.num));
+    RETURN result;
   END;//end Num_Outliers()
-
 
 END;//end DBSCAN
