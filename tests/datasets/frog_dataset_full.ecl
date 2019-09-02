@@ -5,7 +5,7 @@
  * (Found here: https://archive.ics.uci.edu/ml/datasets/Anuran+Calls+%28MFCCs%29)
  *
  * This file contains the  all instances of the total 7195 instances present
- * in the original dataset. This file also contains the results of DBSCAN
+ * in the original dataset. 
  */
 EXPORT frog_dataset_full := MODULE
     EXPORT layout := RECORD
