@@ -6,7 +6,6 @@
  *
  * This file contains the  all instances of the total 7195 instances present
  * in the original dataset. This file also contains the results of DBSCAN
- * clustering performed using sklearn on the first 999 instances for testing purposes.
  */
 EXPORT frog_dataset_full := MODULE
     EXPORT layout := RECORD
