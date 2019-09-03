@@ -8,15 +8,6 @@ IMPORT ML_Core.Types as Types;
 
 EXPORT DBSCAN_Types := MODULE
 
-EXPORT l_stage3 := RECORD
-UNSIGNED4 wi;
-UNSIGNED4 nodeid;
-UNSIGNED4 id;
-UNSIGNED4 parentID;
-BOOLEAN   if_local := FALSE;
-BOOLEAN   if_core := FALSE;
-END;
-
 EXPORT l_stage1 := RECORD
     Types.NumericField;
     UNSIGNED nodeId;
@@ -32,6 +23,15 @@ EXPORT l_stage2 := RECORD
     BOOLEAN if_local := FALSE;
     BOOLEAN if_core := FALSE;
 END;
+EXPORT l_stage3 := RECORD
+UNSIGNED4 wi;
+UNSIGNED4 nodeid;
+UNSIGNED4 id;
+UNSIGNED4 parentID;
+BOOLEAN   if_local := FALSE;
+BOOLEAN   if_core := FALSE;
+END;
+
 
 EXPORT l_result := RECORD
     UNSIGNED4 wi;

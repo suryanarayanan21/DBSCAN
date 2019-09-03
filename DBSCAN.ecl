@@ -467,10 +467,6 @@ EXPORT DBSCAN(REAL8 eps = 0, UNSIGNED4 minPts = 2, STRING8 dist = 'Euclidian', S
                                                           SELF := LEFT));
         RETURN rst;
   END;//end loop_func()
-
-  /**
-    * fit() function i
-    */
   EXPORT DATASET(ML_Core.Types.ClusterLabels) fit(DATASET(Types.NumericField) ds) := FUNCTION
 
     /**
