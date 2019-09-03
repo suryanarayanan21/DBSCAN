@@ -1,6 +1,6 @@
 IMPORT ML_Core;
 IMPORT $.^ AS DBSCAN;
-IMPORT $.datasets.frog_dataset AS frog_data;
+IMPORT $.datasets.frogDS_Small AS frog_data;
 
 // Test to check the Num_clusters function
 
