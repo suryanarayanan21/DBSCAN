@@ -2,9 +2,28 @@ IMPORT DBSCAN_Types AS Files;
 IMPORT Std.system.Thorlib;
 
  EXPORT locCluster := MODULE
-  EXPORT STREAMED DATASET(Files.l_stage3) locDBSCAN(STREAMED DATASET(Files.l_stage2) dsIn,
-                                                    REAL8 eps = 0.0,
-                                                    UNSIGNED minPts = 2,
+  /**
+    * Return the partially clustered result of performing DBSCAN on points present only in one node
+    * locDBSCAN takes as input a dataset distributed such that all points are available in all nodes, but only
+    * whole set of points to form neighbors, resulting in 'local' and 'remote' neighbors. This partial DBSCAN
+    * clustering is returned, per node.
+    *
+    * One of the following distance functions may be used to compute distances between points:
+    * "euclidean","cosine","minkowski","manhattan","haversine","chebyshev"
+    *
+    * Of these, "minkowski" requires an additional parameter called p-value, that must be passed
+    * to the function when used
+    *
+    * @param dsIn          Distributed dataset for clustering in DATASET(l_stage2) format
+    * @param eps           The epsilon value for DBSCAN clustering
+    * @param minPts        The minimum number of points to form a cluster
+    * @param distance_func String naming the distance function to use
+    * @param params        Set of additional parameters needed for distance functions
+    * @param localNode     Parameter that indicates which node the code is running on
+    */
+  EXPORT STREAMED DATASET(Files.l_stage3) locDBSCAN(STREAMED DATASET(Files.l_stage2) dsIn, //distributed data from stage 1
+                                                    REAL8 eps = 0.0,   //distance threshold
+                                                    UNSIGNED minPts = 2, //the minimum number of points required to form a cluster,
                                                     STRING distance_func = 'euclidean',
                                                     SET OF REAL8 params = [],
                                                     UNSIGNED4 localNode = Thorlib.node()
