@@ -5,7 +5,30 @@ IMPORT Std.system.Thorlib;
 IMPORT $.internal.locCluster;
 IMPORT $.internal.globalMerge;
 
-EXPORT DBSCAN(REAL8 eps = 0.0, UNSIGNED4 minPts = 2, STRING dist = 'euclidian', SET OF REAL8 dist_params = []):= MODULE
+/**
+  * Scalable Parallel DBSCAN Clustering Algorithm Implementation based on [1] 
+  *
+  * Reference
+  * [1] Patwary, Mostofa Ali, et al. "A new scalable parallel DBSCAN algorithm using the
+  * disjoint-set data structure." Proceedings of the International Conference on High
+  * Performance Computing, Networking, Storage and Analysis. IEEE Computer Society Press, 2012.
+  *
+  *
+  * @param eps  the maximum distance threshold to be considered as a neighbor of the other.
+  *             Default value is 0.0.
+  * @param minPts the minimum number of points required for a point to become a core point.
+  *             Default value is 2.
+  * @param dist a string describing the distance metrics used to calcualte the distance
+  *             between a paire of points. Default value is 'euclidean'. Other supported
+  *             distance metrics includes 'cosine','haversine', 'chebyshev', 'manhattan',
+  *             'minkowski'.
+  * @param dist_params a set of parameters for distance metrics that need exta setup.
+  *                    Default value is [] which should fit for most cases.
+  */
+EXPORT DBSCAN(REAL8 eps = 0.0,
+                  UNSIGNED4 minPts = 2,
+                      STRING dist = 'euclidian',
+                          SET OF REAL8 dist_params = []):= MODULE
 
   /**
   * Fit function performs DBSCAN clustering on a dataset (ds) to find clusters and the cluster
@@ -45,11 +68,12 @@ EXPORT DBSCAN(REAL8 eps = 0.0, UNSIGNED4 minPts = 2, STRING dist = 'euclidian', 
     X := DISTRIBUTE(X3, ALL);
 
     //Stage 2: local clustering on each node
-    rds := locCluster.locDBSCAN(X, eps := eps, minPts := minPts, distance_func := dist, params := []);
+    rds := locCluster.locDBSCAN(X,eps := eps,minPts := minPts,distance_func:= dist,params := []);
 
     //Stage 3: global merge the local clustering results to the final clustering result
     clusters := globalMerge.Merge(rds);
-    
+
+    //Return the cluster index of each sample
     RETURN clusters;
   END;//end fit()
 

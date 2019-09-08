@@ -2,9 +2,9 @@ IMPORT DBSCAN_Types AS Files;
 IMPORT Std.system.Thorlib;
 
  EXPORT locCluster := MODULE
-  EXPORT STREAMED DATASET(Files.l_stage3) locDBSCAN(STREAMED DATASET(Files.l_stage2) dsIn, //distributed data from stage 1
-                                                    REAL8 eps = 0.0,   //distance threshold
-                                                    UNSIGNED minPts = 2, //the minimum number of points required to form a cluster,
+  EXPORT STREAMED DATASET(Files.l_stage3) locDBSCAN(STREAMED DATASET(Files.l_stage2) dsIn,
+                                                    REAL8 eps = 0.0,
+                                                    UNSIGNED minPts = 2,
                                                     STRING distance_func = 'euclidean',
                                                     SET OF REAL8 params = [],
                                                     UNSIGNED4 localNode = Thorlib.node()
