@@ -4,7 +4,7 @@ IMPORT DBSCAN_Types AS Files;
 IMPORT Std.system.Thorlib;
 
 
-EXPORT DBSCAN(REAL8 eps = 0, UNSIGNED4 minPts = 2, STRING8 dist = 'Euclidian', SET OF REAL8 dist_params = []):= MODULE
+EXPORT DBSCAN(REAL8 eps = 0, UNSIGNED4 minPts = 2, STRING8 dist = 'euclidian', SET OF REAL8 dist_params = []):= MODULE
 
   EXPORT STREAMED DATASET(Files.l_stage3) locDBSCAN(STREAMED DATASET(Files.l_stage2) dsIn, //distributed data from stage 1
                                                     REAL8 eps = eps,   //distance threshold
@@ -120,6 +120,8 @@ EXPORT DBSCAN(REAL8 eps = 0, UNSIGNED4 minPts = 2, STRING8 dist = 'Euclidian', S
                 dist = manhattan(p->fields, ds[i]->fields);
             else if(distanceFunc.compare("haversine")==0)
                 dist = haversine(p->fields, ds[i]->fields);
+            else if(distanceFunc.compare("chebyshev")==0)
+                dist = chebyshev(p->fields, ds[i]->fields);
             else
                 dist = euclidian(p->fields, ds[i]->fields);
 
@@ -554,7 +556,7 @@ EXPORT DBSCAN(REAL8 eps = 0, UNSIGNED4 minPts = 2, STRING8 dist = 'Euclidian', S
                             SELF.parentID := RIGHT.parentID,
                             SELF := LEFT), LOCAL);
 
-    l := LOOP(initial, LEFT.id > 0, EXISTS(ROWS(LEFT)(ultimateID < largestID)), LOOP_Func(ROWS(LEFT), COUNTER) );
+    l := LOOP(initial, LEFT.id > 0, EXISTS(ROWS(LEFT)(ultimateID < largestID)), LOOP_Func(ROWS(LEFT), c) );
     //Update the parentID of all non_outliers from the result
     update_non_outliers := JOIN(non_outliers, l, LEFT.wi = RIGHT.wi AND LEFT.parentid = RIGHT.id, TRANSFORM(l_ultimate,
                                                                     SELF.ultimateID := IF(right.id =0, LEFT.parentid, RIGHT.ultimateID),
