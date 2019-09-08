@@ -558,7 +558,7 @@ EXPORT DBSCAN(REAL8 eps = 0, UNSIGNED4 minPts = 2, STRING8 dist = 'Euclidian', S
                             SELF.parentID := RIGHT.parentID,
                             SELF := LEFT), LOCAL);
 
-    l := LOOP(initial, LEFT.id > 0, EXISTS(ROWS(LEFT)(ultimateID < largestID)), LOOP_Func(ROWS(LEFT), COUNTER) );
+    l := LOOP(initial, LEFT.id > 0, EXISTS(ROWS(LEFT)(ultimateID < largestID)), LOOP_Func(ROWS(LEFT), c) );
     //Update the parentID of all non_outliers from the result
     update_non_outliers := JOIN(non_outliers, l, LEFT.wi = RIGHT.wi AND LEFT.parentid = RIGHT.id, TRANSFORM(l_ultimate,
                                                                     SELF.ultimateID := IF(right.id =0, LEFT.parentid, RIGHT.ultimateID),
