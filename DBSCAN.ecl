@@ -3,10 +3,9 @@ IMPORT ML_Core.Types AS Types;
 IMPORT DBSCAN_Types AS Files;
 IMPORT Std.system.Thorlib;
 
+EXPORT DBSCAN(REAL8 eps = 0.0, UNSIGNED4 minPts = 2, STRING dist = 'euclidian', SET OF REAL8 dist_params = []):= MODULE
 
-EXPORT DBSCAN(REAL8 eps = 0, UNSIGNED4 minPts = 2, STRING dist = 'euclidian', SET OF REAL8 dist_params = []):= MODULE
-
-  EXPORT STREAMED DATASET(Files.l_stage3) locDBSCAN(STREAMED DATASET(Files.l_stage2) dsIn, //distributed data from stage 1
+  SHARED STREAMED DATASET(Files.l_stage3) locDBSCAN(STREAMED DATASET(Files.l_stage2) dsIn, //distributed data from stage 1
                                                     REAL8 eps = eps,   //distance threshold
                                                     UNSIGNED minPts = minPts, //the minimum number of points required to form a cluster,
                                                     STRING distance_func = dist,
@@ -284,7 +283,7 @@ EXPORT DBSCAN(REAL8 eps = 0, UNSIGNED4 minPts = 2, STRING dist = 'euclidian', SE
   ENDEMBED;//end locDBSCAN
 
   //Layout for Ultimate() and Loop_Func()
-  EXPORT l_ultimate := RECORD
+  SHARED  l_ultimate := RECORD
     UNSIGNED4 wi;
     UNSIGNED4 id;
     UNSIGNED4 parentID;
@@ -292,7 +291,7 @@ EXPORT DBSCAN(REAL8 eps = 0, UNSIGNED4 minPts = 2, STRING dist = 'euclidian', SE
     UNSIGNED4 ultimateID := 0;
   END;
 
-  EXPORT STREAMED DATASET(l_ultimate) ultimate(STREAMED DATASET(l_ultimate) dsin, UNSIGNED4 pointcount) := EMBED(C++:activity)
+  SHARED STREAMED DATASET(l_ultimate) ultimate(STREAMED DATASET(l_ultimate) dsin, UNSIGNED4 pointcount) := EMBED(C++:activity)
     #include <stdio.h>
     struct upt
     {
@@ -448,7 +447,7 @@ EXPORT DBSCAN(REAL8 eps = 0, UNSIGNED4 minPts = 2, STRING dist = 'euclidian', SE
   ENDEMBED;//end ultimate()
 
   //LOOP to get the final result/ultimateID
-  EXPORT Loop_Func(DATASET(l_ultimate) ds, UNSIGNED c) := FUNCTION
+  SHARED Loop_Func(DATASET(l_ultimate) ds, UNSIGNED c) := FUNCTION
         tempLayout := RECORD
           UNSIGNED4 wi;
           UNSIGNED4 id;
@@ -469,6 +468,16 @@ EXPORT DBSCAN(REAL8 eps = 0, UNSIGNED4 minPts = 2, STRING dist = 'euclidian', SE
                                                           SELF := LEFT));
         RETURN rst;
   END;//end loop_func()
+
+  /**
+  * Fit function performs DBSCAN clustering on a dataset (ds) to find clusters and the cluster
+  * index (Label) of each sample in the dataset.
+  *
+  * @param ds  The dataset in NumericField format to be clustered.
+  * @return result in ML_Core.Types.ClusterLabels format describing the cluster index of
+  * each sample.
+  * @see ML_Core.Types.NumericField, ML_Core.Types.ClusterLabels
+  */
   EXPORT DATASET(ML_Core.Types.ClusterLabels) fit(DATASET(Types.NumericField) ds) := FUNCTION
 
     /**
