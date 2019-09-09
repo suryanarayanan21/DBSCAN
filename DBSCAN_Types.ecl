@@ -44,7 +44,7 @@ EXPORT DBSCAN_Types := MODULE
         Types.NumericField.wi;
         Types.NumericField.id;
         Types.t_RecordID parentID;
-        UNSIGNED nodeId;
+        UNSIGNED4 nodeId;
         SET OF REAL4 fields;
         BOOLEAN if_local := FALSE;
         BOOLEAN if_core := FALSE;
@@ -65,7 +65,7 @@ EXPORT DBSCAN_Types := MODULE
         Types.NumericField.wi;
         Types.NumericField.id;
         Types.t_RecordID parentID;
-        UNSIGNED nodeid;
+        UNSIGNED4 nodeid;
         BOOLEAN   if_local := FALSE;
         BOOLEAN   if_core := FALSE;
     END;
