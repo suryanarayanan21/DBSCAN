@@ -6,13 +6,20 @@ IMPORT $.internal.locCluster;
 IMPORT $.internal.globalMerge;
 
 /**
-  * Scalable Parallel DBSCAN Clustering Algorithm Implementation based on [1] 
+  * Scalable Parallel DBSCAN Clustering Algorithm Implementation based on [1].
+  * It's an extension of the original DBSCAN algorithm [2] to meet the challenge
+  * of clustering problems on the Big Data platforms such as HPCC Systems.
+  *
+  * Based on the algorithm, this implementation has three stages: 1. Data preparation,
+  * 2. Local clustering, 3. Global Merge. The details of stage 2 and 3 can be found in
+  * the /internal/locCluster.ecl and /internal/globalMerge.ecl.
   *
   * Reference
   * [1] Patwary, Mostofa Ali, et al. "A new scalable parallel DBSCAN algorithm using the
   * disjoint-set data structure." Proceedings of the International Conference on High
   * Performance Computing, Networking, Storage and Analysis. IEEE Computer Society Press, 2012.
-  *
+  * [2] Ester, Martin, et al. "A density-based algorithm for discovering clusters in large
+  * spatial databases with noise." Kdd. Vol. 96. No. 34. 1996.
   *
   * @param eps  the maximum distance threshold to be considered as a neighbor of the other.
   *             Default value is 0.0.
