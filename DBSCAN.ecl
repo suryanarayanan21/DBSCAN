@@ -68,7 +68,7 @@ EXPORT DBSCAN(REAL8 eps = 0.0,
     X := DISTRIBUTE(X3, ALL);
 
     //Stage 2: local clustering on each node
-    rds := locCluster.locDBSCAN(X,eps := eps,minPts := minPts,distance_func:= dist,params := []);
+    rds := locCluster.locDBSCAN(X,eps := eps,minPts := minPts,distance_func:= dist,params := dist_params);
 
     //Stage 3: global merge the local clustering results to the final clustering result
     clusters := globalMerge.Merge(rds);
