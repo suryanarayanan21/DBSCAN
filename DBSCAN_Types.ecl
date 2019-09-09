@@ -69,7 +69,18 @@ EXPORT DBSCAN_Types := MODULE
         BOOLEAN   if_local := FALSE;
         BOOLEAN   if_core := FALSE;
     END;
-
+    /**
+      * l_num_clusters
+      *
+      * This record structure holds the results of functions that return statistics
+      * about the clusters formed in DBSCAN clustering, that is, it is the result
+      * structure for num_clusters and num_outliers.
+      *
+      * It contains the value of the statistic, per work-item
+      *
+      * @field wi The work-item identifier
+      * @field num The value of the statistic (Number of clusters / outliers)
+      */
     EXPORT l_num_clusters := RECORD
         UNSIGNED4 wi;
         UNSIGNED4 num;
