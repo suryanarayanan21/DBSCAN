@@ -4,9 +4,26 @@ IMPORT $.DBSCAN_Types AS Files;
 IMPORT Std.system.Thorlib;
 IMPORT $.internal.locCluster;
 
+/**
+  * Module for DBSCAN Algorithm
+  *
+  * This module provides a DBSCAN Algorithm implementation using disjoint set data structure.
+  * Implementation of 'A new scalable parallel DBSCAN algorithm using the disjoint-set data structure'
+  * with slight modifications.
+  *
+  */
+
 EXPORT DBSCAN(REAL8 eps = 0.0, UNSIGNED4 minPts = 2, STRING dist = 'euclidian', SET OF REAL8 dist_params = []):= MODULE
 
-  //Layout for Ultimate() and Loop_Func()
+  
+  /*
+  * Layout for Ultimate() and Loop_Func()
+  * @field wi The id to hold work-item.
+  * @field id The id of datapoint in dataset.
+  * @field parentID The parentID assigned to the data point in the dataset after locDBSCAN.
+  * @field largestID The largest id per datapoint after clustering.
+  * @field ultimateID The ultimate id of the datapoint after global merge.
+  */
   SHARED  l_ultimate := RECORD
     UNSIGNED4 wi;
     UNSIGNED4 id;
@@ -14,7 +31,12 @@ EXPORT DBSCAN(REAL8 eps = 0.0, UNSIGNED4 minPts = 2, STRING dist = 'euclidian', 
     UNSIGNED4 largestID := 0;
     UNSIGNED4 ultimateID := 0;
   END;
-
+  /*
+  * Ultimate function returns the ultimate id.
+  * @field dsin The dataset containing the local cores
+  * @field pointcount The count for the datapoints.
+  * @return All ultimates for local core points.  
+  */
   SHARED STREAMED DATASET(l_ultimate) ultimate(STREAMED DATASET(l_ultimate) dsin, UNSIGNED4 pointcount) := EMBED(C++:activity)
     #include <stdio.h>
     struct upt

@@ -36,7 +36,7 @@ IMPORT Std.system.Thorlib;
 
     string distanceFunc = "euclidian";
     vector<double> dist_params;
-
+    //data structure to represent the data points in a dataset for disjoint sets.
     struct node{
         uint16_t wi;
         uint64_t id;
@@ -48,7 +48,7 @@ IMPORT Std.system.Thorlib;
         bool isModified = false;
         bool isVisited = false;
     };
-
+    // distance = (sum((a - b)^2))^(1/2)
     double euclidian(vector<float> a, vector<float> b){
         double sum=0;
         for(int i=0; i<a.size(); ++i){
@@ -56,7 +56,8 @@ IMPORT Std.system.Thorlib;
         }
         return sqrt(sum);
     }
-
+    // distance = 2*r*sin^-1((sin^2((a-b)/2)+cos(a)*cos(b)*sin^2((x-y)/2))
+    // applicable only when size of columns is 2.
     double haversine(vector<float> a, vector<float> b){
         int M=a.size();
 
@@ -75,7 +76,7 @@ IMPORT Std.system.Thorlib;
         return (sin_0 * sin_0 + cos(lat1) * cos(lat2) * sin_1 * sin_1);
     }
 
-
+    // distance = sum(|a - b|)
     double manhattan(vector<float> a, vector<float> b){
         double ans=0;
         int M=a.size();
@@ -84,10 +85,8 @@ IMPORT Std.system.Thorlib;
 
         return ans;
     }
-
+    // distance = sum(|a - b|^p)^(1/p) 
     double minkowski(vector<float> a, vector<float> b, int p){
-        // sum(|x - y|^p)^(1/p)
-
         int m=a.size();
         double ans=0;
         for(int i=0;i<m;i++){
@@ -97,6 +96,7 @@ IMPORT Std.system.Thorlib;
         return pow(ans,(double)1/p);
     }
 
+    // distance = ((A.B)/(||A||.||B||))
     double cosine(vector<float> a, vector<float> b){
         double ans=0, a1=0,a2=0;
         int m=a.size();
@@ -107,9 +107,8 @@ IMPORT Std.system.Thorlib;
         }
         return ans/(sqrt(a1)*sqrt(a2));
     }
-
+    // distance = max(|x - y|)
     double chebyshev(vector<float> a, vector<float> b){
-        // max(|x - y|)
         int m=a.size();
         float ans=0;
         for(int i=0;i<m;i++){
@@ -117,7 +116,11 @@ IMPORT Std.system.Thorlib;
         }
         return ans;
     }
-
+    /*
+      getNeighbors Function to get the nearest neighbors within eps distance. 
+      input: Vector ds, node p, distance eps
+      output: A vecor of nearest neighbors
+    */
     vector<node*> getNeighbors(vector<node*> ds, node *p, double eps){
         vector<node*> ret;
         for(uint64_t i=0; i<ds.size(); ++i){
@@ -144,6 +147,9 @@ IMPORT Std.system.Thorlib;
         return ret;
     }
 
+    // function: find returns the ultimate parent of the node in tree.
+    // input: node * data pointer
+    // output: pointer to parent of tree.
     node* find(node *p){
         if(p->parent == NULL || p->parent == p){
             return p;
@@ -151,7 +157,9 @@ IMPORT Std.system.Thorlib;
             return find(p->parent);
         }
     }
-
+    // function: Union merges the trees a and b based on disjoint sets
+    // input : Two trees(a and b) to merge
+    // output: void.
     void Union(vector<node*> ds, node* a, node* b){
         node* x = find(a);
         node* y = find(b);
@@ -166,7 +174,8 @@ IMPORT Std.system.Thorlib;
         else if(x->id > y->id) y->parent = x;
         else x->parent = y;
     }
-
+    //function: dbscan returns a dataset with parentid's in each local node.
+    //input: Vector ds, distance eps and number od min points.
     void dbscan(vector<node*> ds, double eps, uint64_t minpts) {
         for(uint64_t i=0; i<ds.size(); ++i){
 
