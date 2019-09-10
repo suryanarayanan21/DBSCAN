@@ -297,7 +297,7 @@ IMPORT Std.system.Thorlib;
     };
 
     #body
-    //Main cpp code. Setting the distance metric =['haversine','euclidean','minkowski']
+    //Main cpp code. Setting the distance function type like 'euclidean','haversine',etc.
     distanceFunc = distance_func;
     double* p = (double*)params;
 
