@@ -44,7 +44,7 @@ EXPORT DBSCAN_Types := MODULE
         Types.NumericField.wi;
         Types.NumericField.id;
         Types.t_RecordID parentID;
-        UNSIGNED4 nodeId;
+        UNSIGNED nodeId;
         SET OF REAL4 fields;
         BOOLEAN if_local := FALSE;
         BOOLEAN if_core := FALSE;
@@ -62,12 +62,12 @@ EXPORT DBSCAN_Types := MODULE
       * @see ML_Core.Types.NumericField.
       */
     EXPORT l_stage3 := RECORD
-        Types.NumericField.wi;
-        Types.NumericField.id;
-        Types.t_RecordID parentID;
-        UNSIGNED4 nodeid;
-        BOOLEAN   if_local := FALSE;
-        BOOLEAN   if_core := FALSE;
+      UNSIGNED4 wi;
+      UNSIGNED4 nodeid;
+      UNSIGNED4 id;
+      UNSIGNED4 parentID;
+      BOOLEAN   if_local := FALSE;
+      BOOLEAN   if_core := FALSE;
     END;
     /**
       * l_num_clusters
