@@ -21,9 +21,12 @@ IMPORT Std.system.Thorlib;
     * @param params        Set of additional parameters needed for distance functions
     * @param localNode     Parameter that indicates which node the code is running on
     */
-  EXPORT STREAMED DATASET(Files.l_stage3) locDBSCAN(STREAMED DATASET(Files.l_stage2) dsIn, //distributed data from stage 1
+  EXPORT STREAMED DATASET(Files.l_stage3) locDBSCAN(STREAMED DATASET(Files.l_stage2) dsIn, 
+                                                    //distributed data from stage 1
                                                     REAL8 eps = 0.0,   //distance threshold
-                                                    UNSIGNED minPts = 2, //the minimum number of points required to form a cluster,
+                                                    UNSIGNED minPts = 2, 
+                                                    //the minimum number of points required to
+                                                    //form a cluster,
                                                     STRING distance_func = 'euclidean',
                                                     SET OF REAL8 params = [],
                                                     UNSIGNED4 localNode = Thorlib.node()
@@ -298,7 +301,7 @@ IMPORT Std.system.Thorlib;
 
     for(uint32_t i=0; i<lenParams/sizeof(double); ++i){
         dist_params.push_back(*p);
-        p += sizeof(double);
+        p += sizeof(double); 
     }
 
     transform(distanceFunc.begin(),distanceFunc.end(),distanceFunc.begin(),::tolower);
