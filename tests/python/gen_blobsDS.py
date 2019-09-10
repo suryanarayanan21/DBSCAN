@@ -1,4 +1,6 @@
-//Todo: add comments
+# Build an ecl version of the Blobs Dataset for testing purposes.
+# See: http://tiny.cc/be8fcz for details.
+# To run:  python gen_blobsDS.py > ..\datasets\blobsDS.ecl
 
 import numpy as np
 from sklearn.cluster import DBSCAN

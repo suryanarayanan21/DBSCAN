@@ -44,7 +44,7 @@ EXPORT DBSCAN_Types := MODULE
         Types.NumericField.wi;
         Types.NumericField.id;
         Types.t_RecordID parentID;
-        UNSIGNED4 nodeId;
+        UNSIGNED nodeId;
         SET OF REAL4 fields;
         BOOLEAN if_local := FALSE;
         BOOLEAN if_core := FALSE;
@@ -62,14 +62,25 @@ EXPORT DBSCAN_Types := MODULE
       * @see ML_Core.Types.NumericField.
       */
     EXPORT l_stage3 := RECORD
-        Types.NumericField.wi;
-        Types.NumericField.id;
-        Types.t_RecordID parentID;
-        UNSIGNED4 nodeid;
-        BOOLEAN   if_local := FALSE;
-        BOOLEAN   if_core := FALSE;
+      UNSIGNED4 wi;
+      UNSIGNED4 nodeid;
+      UNSIGNED4 id;
+      UNSIGNED4 parentID;
+      BOOLEAN   if_local := FALSE;
+      BOOLEAN   if_core := FALSE;
     END;
-
+    /**
+      * l_num_clusters
+      *
+      * This record structure holds the results of functions that return statistics
+      * about the clusters formed in DBSCAN clustering, that is, it is the result
+      * structure for num_clusters and num_outliers.
+      *
+      * It contains the value of the statistic, per work-item
+      *
+      * @field wi The work-item identifier
+      * @field num The value of the statistic (Number of clusters / outliers)
+      */
     EXPORT l_num_clusters := RECORD
         UNSIGNED4 wi;
         UNSIGNED4 num;
